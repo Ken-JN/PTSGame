@@ -7,12 +7,17 @@ public class PlayerMovement : MonoBehaviour, IDamageable
     public float kecepatan = 5f;
     private Vector2 arahGerak;
 
+    [Header("Referensi Cahaya")]
+    public Transform playerLight; // Drag Transform Light 2D di Inspector
+    public float kecepatanRotasiLight = 15f;
+    private Vector2 arahTerakhirCahaya = Vector2.down;
+
     [Header("Sistem Skor")]
     public int skor = 0;
 
     [Header("Health")]
     public int hp = 100;
-    public float waktuKebalDetik = 0.5f; // jeda kebal setelah kena damage
+    public float waktuKebalDetik = 0.5f;
     private float waktuKenaTerakhir = -999f;
 
     [Header("Attack")]
@@ -22,6 +27,12 @@ public class PlayerMovement : MonoBehaviour, IDamageable
     void OnMove(InputValue value)
     {
         arahGerak = value.Get<Vector2>();
+
+        // Simpan arah terakhir saat player bergerak agar cahaya tidak kembali ke (0,0) saat berhenti
+        if (arahGerak.sqrMagnitude > 0.01f)
+        {
+            arahTerakhirCahaya = arahGerak.normalized;
+        }
     }
 
     void OnFire()
@@ -48,8 +59,29 @@ public class PlayerMovement : MonoBehaviour, IDamageable
 
     void Update()
     {
+        // 1. Pergerakan Player
         Vector3 arah = new Vector3(arahGerak.x, arahGerak.y, 0);
         transform.position += arah * kecepatan * Time.deltaTime;
+
+        // 2. Rotasi Light 2D Mengikuti Arah
+        RotateLight();
+    }
+
+    void RotateLight()
+    {
+        if (playerLight == null) return;
+
+        // Hitung sudut dari Vector2 arahTerakhirCahaya
+        float angle = Mathf.Atan2(arahTerakhirCahaya.y, arahTerakhirCahaya.x) * Mathf.Rad2Deg;
+
+        // Sesuaikan offset (-90f jika cahaya bawaan menghadap Atas pada Euler 0)
+        Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle - 90f);
+
+        playerLight.rotation = Quaternion.Lerp(
+            playerLight.rotation,
+            targetRotation,
+            Time.deltaTime * kecepatanRotasiLight
+        );
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -70,7 +102,6 @@ public class PlayerMovement : MonoBehaviour, IDamageable
 
     public void KenaDamage(int jumlah)
     {
-        // JANGAN proses damage kalau masih dalam periode kebal
         if (Time.time < waktuKenaTerakhir + waktuKebalDetik)
         {
             return;
