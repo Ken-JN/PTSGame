@@ -17,10 +17,10 @@ public class InventoryManager : MonoBehaviour
     {
         if (inventoryAction.triggered)
         {
-            inventoryUI.SetActive(!inventoryUI.activeSelf);
+            inventoryCanvas.SetActive(!inventoryCanvas.activeSelf);
             Debug.Log("Inventory button pressed");
 
-            Time.timeScale = inventoryUI.activeSelf ? 0f : 1f; 
+            Time.timeScale = inventoryCanvas.activeSelf ? 0f : 1f; 
         }
     }
 }
