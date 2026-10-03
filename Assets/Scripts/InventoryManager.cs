@@ -5,7 +5,7 @@ public class InventoryManager : MonoBehaviour
 {
     private InputAction inventoryAction;
 
-    public GameObject inventoryUI;
+    [SerializeField] private GameObject inventoryCanvas;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -19,6 +19,8 @@ public class InventoryManager : MonoBehaviour
         {
             inventoryUI.SetActive(!inventoryUI.activeSelf);
             Debug.Log("Inventory button pressed");
+
+            Time.timeScale = inventoryUI.activeSelf ? 0f : 1f; 
         }
     }
 }

@@ -166,8 +166,8 @@ MonoBehaviour:
   m_ComponentVersion: 2
   m_LightType: 3
   m_BlendStyleIndex: 0
-  m_FalloffIntensity: 0.567
-  m_Color: {r: 0.5320754, g: 0.4928777, b: 0.3122178, a: 1}
+  m_FalloffIntensity: 0.596
+  m_Color: {r: 0.5320754, g: 0.4928777, b: 0.3122178, a: 0.56078434}
   m_Intensity: 2.61
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
@@ -189,10 +189,10 @@ MonoBehaviour:
   m_LocalBounds:
     m_Center: {x: 0, y: -0.00000011920929, z: 0}
     m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
-  m_PointLightInnerAngle: 0
-  m_PointLightOuterAngle: 143.04286
-  m_PointLightInnerRadius: 2.05
-  m_PointLightOuterRadius: 5.82
+  m_PointLightInnerAngle: 34.032497
+  m_PointLightOuterAngle: 143.04285
+  m_PointLightInnerRadius: 2.74
+  m_PointLightOuterRadius: 9.89
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -3806,7 +3806,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 36e0104d676f4fd4eaa6bc88a9c511ee, type: 2}
+  - {fileID: 2100000, guid: 85c7b83f3688035469e4aedd2ed9de34, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5012,7 +5012,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 36e0104d676f4fd4eaa6bc88a9c511ee, type: 2}
+  - {fileID: 2100000, guid: 85c7b83f3688035469e4aedd2ed9de34, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5036,7 +5036,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
-  m_Color: {r: 0.21039653, g: 1, b: 0, a: 1}
+  m_Color: {r: 0.8218224, g: 0.86415094, b: 0.13532923, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -8025,7 +8025,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 357a6f09434f18846bd475a0187669ae, type: 2}
+  - {fileID: 2100000, guid: 85c7b83f3688035469e4aedd2ed9de34, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8049,7 +8049,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
-  m_Color: {r: 0.21039653, g: 1, b: 0, a: 1}
+  m_Color: {r: 0.09183636, g: 0, b: 0.96981126, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
