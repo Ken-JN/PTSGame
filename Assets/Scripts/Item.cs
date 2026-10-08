@@ -1,23 +1,34 @@
 using UnityEngine;
 
 
-public class Item : MonoBehaviour, GrabableItem
+public class Item : MonoBehaviour
 {
 
-    itemDetails itemDetails;
-    public void GrabItem()
+    [SerializeField] private ItemDetails ItemDetails;
+    private GrabableItem ItemCollector;
+       void Awake()
     {
-        Debug.Log("Item grabbed!");
-        Destroy(gameObject); // Implementation for grabbing the item
+        foreach (MonoBehaviour component in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+        {
+            if (component is GrabableItem collector)
+            {
+                ItemCollector = collector;
+                break;
+            }
+        }
+
+        if (ItemCollector == null)
+        {
+            Debug.LogError("No active component implementing GrabableItem was found in the scene.", this);
+        }
     }
 
-    private void OnColliderEnter2D(Collider2D other)
+ private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && ItemDetails != null && ItemCollector != null)
         {
-            Debug.Log("Item grabbed!");
-            GrabItem();
-            // Optional: Destroy the item after grabbing
+            ItemCollector.AddItem(ItemDetails);
+            Destroy(gameObject);
         }
     }
 
