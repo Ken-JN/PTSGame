@@ -8,7 +8,8 @@ public class ItemSlot : MonoBehaviour
     public string itemName;
     public int itemQuantity;
     public Sprite itemIcon;
-    public bool isFull;
+    public bool hasItem;
+    public bool isFull => itemQuantity >= maxStackSize;
 
     // Item Slot
     [SerializeField] private TMP_Text quantityText;
@@ -20,11 +21,33 @@ public class ItemSlot : MonoBehaviour
         itemName = item.ItemName;
         itemQuantity = item.Quantity;
         itemIcon = item.ItemIcon;
-        isFull = true;
+        hasItem = true;
 
         quantityText.text = itemQuantity.ToString();
         quantityText.enabled = true;
-        itemImage.sprite = itemIcon;
+        if (itemImage != null)
+        {
+            itemImage.sprite = itemIcon;
+            itemImage.enabled = true;
+        }
+    }
+
+    public bool CanStackWith(string otherItemName)
+    {
+        return hasItem && itemName == otherItemName && !isFull;
+    }
+
+     public void AddQuantity(int amount)
+    {
+        itemQuantity += amount;
+
+        quantityText.text = itemQuantity.ToString();
+        quantityText.enabled = true;
+        if (itemImage != null && itemIcon != null)
+        {
+            itemImage.sprite = itemIcon;
+            itemImage.enabled = true;
+        }
     }
     
 }

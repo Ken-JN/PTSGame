@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: ItemDetails
   m_EditorClassIdentifier: Assembly-CSharp::ItemDetails
   itemName: sampah
-  quantity: 1
-  itemIcon: {fileID: 2522877162684164864, guid: 6c61b3304398df042bb4dcc4ef01cdb1, type: 3}
+  quantity: 5
+  itemIcon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}

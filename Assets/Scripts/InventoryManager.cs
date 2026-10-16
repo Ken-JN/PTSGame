@@ -7,9 +7,9 @@ public class InventoryManager : MonoBehaviour, GrabableItem
     InputAction inventoryAction;
     [SerializeField] private GameObject InventoryCanvas;
     [SerializeField] private int slotCount = 16;
-    [SerializeField] private ItemSlot slotPrefab;
     private bool InventoryActive;
     public ItemSlot[] itemSlot;
+    [SerializeField] private ItemSlot slotPrefab;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -73,9 +73,20 @@ public class InventoryManager : MonoBehaviour, GrabableItem
             return;
         }
 
+        // First, try to stack the item onto a slot that already holds the same item
         for (int i = 0; i < itemSlot.Length; i++)
         {
-            if (!itemSlot[i].isFull)
+            if (itemSlot[i].CanStackWith(item.ItemName))
+            {
+                itemSlot[i].AddQuantity(item.Quantity);
+                return;
+            }
+        }
+
+        // Otherwise, put the item into the first empty slot
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if (!itemSlot[i].hasItem)
             {
                 itemSlot[i].AddItem(item);
                 return;
