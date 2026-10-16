@@ -8,46 +8,36 @@ public class ItemSlot : MonoBehaviour
     public string itemName;
     public int itemQuantity;
     public Sprite itemIcon;
-    public bool hasItem;
-    public bool isFull => itemQuantity >= maxStackSize;
+    public bool isFull;
+
+    // Maximum number of items that fit in one slot
+    [SerializeField] private int maxStackSize = 99;
 
     // Item Slot
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private Image itemImage;
-    [SerializeField] private int maxStackSize = 99;
-    
-   public void AddItem(ItemDetails item)
-    {
-        itemName = item.ItemName;
-        itemQuantity = item.Quantity;
-        itemIcon = item.ItemIcon;
-        hasItem = true;
 
-        quantityText.text = itemQuantity.ToString();
-        quantityText.enabled = true;
-        if (itemImage != null)
-        {
-            itemImage.sprite = itemIcon;
-            itemImage.enabled = true;
-        }
-    }
-
+    // Check if this slot can stack more of the same item
     public bool CanStackWith(string otherItemName)
     {
-        return hasItem && itemName == otherItemName && !isFull;
+        return !isFull && itemName == otherItemName;
     }
 
-     public void AddQuantity(int amount)
+    public void AddItem(ItemDetails item)
+    {
+        itemName = item.ItemName;
+        itemIcon = item.ItemIcon;
+        AddQuantity(item.Quantity);
+    }
+
+    // Increase the count of items already in this slot
+    public void AddQuantity(int amount)
     {
         itemQuantity += amount;
+        isFull = itemQuantity >= maxStackSize;
 
         quantityText.text = itemQuantity.ToString();
         quantityText.enabled = true;
-        if (itemImage != null && itemIcon != null)
-        {
-            itemImage.sprite = itemIcon;
-            itemImage.enabled = true;
-        }
+        itemImage.sprite = itemIcon;
     }
-    
 }

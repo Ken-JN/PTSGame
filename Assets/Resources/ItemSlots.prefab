@@ -229,12 +229,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemSlot
   itemName: Sampahhh
-  itemQuantity: 5
+  itemQuantity: 0
   itemIcon: {fileID: 0}
   isFull: 0
+  maxStackSize: 99
   quantityText: {fileID: 6056527931135567464}
   itemImage: {fileID: 3428823503330669025}
-  maxStackSize: 99
 --- !u!1 &3626503054336010548
 GameObject:
   m_ObjectHideFlags: 0

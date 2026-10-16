@@ -86,7 +86,7 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         // Otherwise, put the item into the first empty slot
         for (int i = 0; i < itemSlot.Length; i++)
         {
-            if (!itemSlot[i].hasItem)
+            if (!itemSlot[i].isFull)
             {
                 itemSlot[i].AddItem(item);
                 return;
