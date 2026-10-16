@@ -1,34 +1,24 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class InventoryManager : MonoBehaviour, GrabableItem
 {
     InputAction inventoryAction;
     [SerializeField] private GameObject InventoryCanvas;
+    [SerializeField] private int slotCount = 16;
+    [SerializeField] private ItemSlot slotPrefab;
     private bool InventoryActive;
+    public ItemSlot[] itemSlot;
 
-    private int slotCount = 5;
-    private ItemSlot[] itemSlots;
-
-    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        CreateSlots();
         InventoryCanvas.SetActive(false);
         inventoryAction = InputSystem.actions.FindAction("Inventory");
         InventoryActive = false;
 
-    }
-
-    private void CreateSlots()
-    {
-        ItemSlot slotPrefab = Resources.Load<ItemSlot>("ItemSlot");
-        if(slotPrefab == null)
-        {
-            Debug.LogError("ItemSlot prefab not found in Resources folder.");
-            itemSlots = new ItemSlot[0];
-            return;
-        }
     }
 
     // Update is called once per frame
@@ -49,9 +39,49 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         }
     }
 
+    // Build the slot objects at runtime so no manual wiring is needed in the scene
+    private void CreateSlots()
+{
+    if (slotPrefab == null)
+    {
+        Debug.LogError("Slot Prefab belum dimasukkan ke Inspector!", this);
+        itemSlot = new ItemSlot[0];
+        return;
+    }
+
+    Transform parent = InventoryCanvas.transform;
+    GridLayoutGroup grid = InventoryCanvas.GetComponentInChildren<GridLayoutGroup>(true);
+    if (grid != null)
+    {
+        parent = grid.transform;
+    }
+
+    itemSlot = new ItemSlot[slotCount];
+    for (int i = 0; i < itemSlot.Length; i++)
+    {
+        itemSlot[i] = Instantiate(slotPrefab, parent);
+    }
+}
+
     public void AddItem(ItemDetails item)
     {
         Debug.Log("Item added to inventory: " + item.ItemName + " Quantity: " + item.Quantity);
-        // Add item to inventory logic here
+
+        if (itemSlot == null || itemSlot.Length == 0)
+        {
+            Debug.LogWarning("Inventory has no slots, '" + item.ItemName + "' was lost.");
+            return;
+        }
+
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if (!itemSlot[i].isFull)
+            {
+                itemSlot[i].AddItem(item);
+                return;
+            }
+        }
+
+        Debug.LogWarning("Inventory is full, '" + item.ItemName + "' was lost.");
     }
 }

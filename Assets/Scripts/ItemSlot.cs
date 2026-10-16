@@ -13,6 +13,7 @@ public class ItemSlot : MonoBehaviour
     // Item Slot
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private Image itemImage;
+    [SerializeField] private int maxStackSize = 99;
     
    public void AddItem(ItemDetails item)
     {
