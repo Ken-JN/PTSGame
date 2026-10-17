@@ -1,8 +1,9 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
-public class ItemSlot : MonoBehaviour
+public class ItemSlot : MonoBehaviour, IPointerClickHandler
 {
     // Item Data
     public string itemName;
@@ -39,5 +40,10 @@ public class ItemSlot : MonoBehaviour
         quantityText.text = itemQuantity.ToString();
         quantityText.enabled = true;
         itemImage.sprite = itemIcon;
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        throw new System.NotImplementedException();
     }
 }
