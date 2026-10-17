@@ -62,6 +62,15 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         itemSlot[i] = Instantiate(slotPrefab, parent);
     }
 }
+public void DeselectAllSlots()
+    {
+        foreach (ItemSlot slot in itemSlot)
+        {
+            slot.isItemSelected = false;
+            slot.isItemSelected = false;
+        }
+        
+    }
 
     public void AddItem(ItemDetails item)
     {
@@ -94,5 +103,7 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         }
 
         Debug.LogWarning("Inventory is full, '" + item.ItemName + "' was lost.");
+        
     }
+    
 }

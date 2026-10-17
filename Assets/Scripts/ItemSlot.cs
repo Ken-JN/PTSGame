@@ -10,6 +10,7 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
     public int itemQuantity;
     public Sprite itemIcon;
     public bool isFull;
+    public ItemSlot[] itemSlot;
 
     // Maximum number of items that fit in one slot
     [SerializeField] private int maxStackSize = 99;
@@ -19,12 +20,17 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Image itemImage;
     //selected item
     [SerializeField] private Image selectedPanel;
-    public bool isItemSelected = false;
+    public bool isItemSelected;
+    public InventoryManager inventoryManager;
 
     // Check if this slot can stack more of the same item
     public bool CanStackWith(string otherItemName)
     {
         return !isFull && itemName == otherItemName;
+    }
+    public void Start()
+    {
+        inventoryManager = FindObjectOfType<InventoryManager>();
     }
 
     public void AddItem(ItemDetails item)
@@ -56,23 +62,30 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
             RightClick();
         }
     }
+    public void DeselectAllSlots()
+    {
+        foreach (ItemSlot slot in itemSlot)
+        {
+            slot.selectedPanel.gameObject.SetActive(false);
+            slot.isItemSelected = false;
+        }
+        
+    }
 
     private void LeftClick()
     {
         Debug.Log("Left-clicked on item: " + itemName);
+        inventoryManager.DeselectAllSlots();
         selectedPanel.gameObject.SetActive(true);
         isItemSelected = true;
-    
     }
 
     private void RightClick()
     {
         Debug.Log("Right-clicked on item: " + itemName);
-        selectedPanel.gameObject.SetActive(false);
-        isItemSelected = false;
+        // selectedPanel.gameObject.SetActive(false);
+        // isItemSelected = false;
     }
-
-
     
 
 }
