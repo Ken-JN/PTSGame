@@ -44,6 +44,32 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        throw new System.NotImplementedException();
+        if(eventData.button == PointerEventData.InputButton.Left)
+        {
+            Debug.Log("Left-clicked on item: " + itemName);
+            LeftClick();
+        }
+        if(eventData.button == PointerEventData.InputButton.Right)
+        {
+            Debug.Log("Right-clicked on item: " + itemName);
+            RightClick();
+        }
     }
+
+    private void LeftClick()
+    {
+        Debug.Log("Left-clicked on item: " + itemName);
+    
+    }
+
+    private void RightClick()
+    {
+        Debug.Log("Right-clicked on item: " + itemName);
+       
+    }
+
+
+    
+
 }
+
