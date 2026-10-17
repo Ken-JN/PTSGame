@@ -17,6 +17,9 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
     // Item Slot
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private Image itemImage;
+    //selected item
+    [SerializeField] private Image selectedPanel;
+    public bool isItemSelected = false;
 
     // Check if this slot can stack more of the same item
     public bool CanStackWith(string otherItemName)
@@ -46,12 +49,10 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
     {
         if(eventData.button == PointerEventData.InputButton.Left)
         {
-            Debug.Log("Left-clicked on item: " + itemName);
             LeftClick();
         }
         if(eventData.button == PointerEventData.InputButton.Right)
         {
-            Debug.Log("Right-clicked on item: " + itemName);
             RightClick();
         }
     }
@@ -59,6 +60,8 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
     private void LeftClick()
     {
         Debug.Log("Left-clicked on item: " + itemName);
+        selectedPanel.gameObject.SetActive(true);
+        isItemSelected = true;
     
     }
 

@@ -235,6 +235,8 @@ MonoBehaviour:
   maxStackSize: 99
   quantityText: {fileID: 6056527931135567464}
   itemImage: {fileID: 3428823503330669025}
+  selectedPanel: {fileID: 5762730898734035425}
+  isItemSelected: 0
 --- !u!1 &3626503054336010548
 GameObject:
   m_ObjectHideFlags: 0
