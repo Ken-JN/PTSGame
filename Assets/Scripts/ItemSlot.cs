@@ -68,7 +68,8 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
     private void RightClick()
     {
         Debug.Log("Right-clicked on item: " + itemName);
-       
+        selectedPanel.gameObject.SetActive(false);
+        isItemSelected = false;
     }
 
 
