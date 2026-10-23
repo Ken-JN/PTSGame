@@ -7,9 +7,10 @@ public class InventoryManager : MonoBehaviour, GrabableItem
     InputAction inventoryAction;
     [SerializeField] private GameObject InventoryCanvas;
     [SerializeField] private int slotCount = 16;
+    [SerializeField] private ItemDetailsPanel detailsPanel;
     private bool InventoryActive;
+    private ItemSlot selectedSlot;
     public ItemSlot[] itemSlot;
-    [SerializeField] private ItemSlot slotPrefab;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -41,35 +42,48 @@ public class InventoryManager : MonoBehaviour, GrabableItem
 
     // Build the slot objects at runtime so no manual wiring is needed in the scene
     private void CreateSlots()
-{
-    if (slotPrefab == null)
     {
-        Debug.LogError("Slot Prefab belum dimasukkan ke Inspector!", this);
-        itemSlot = new ItemSlot[0];
-        return;
-    }
-
-    Transform parent = InventoryCanvas.transform;
-    GridLayoutGroup grid = InventoryCanvas.GetComponentInChildren<GridLayoutGroup>(true);
-    if (grid != null)
-    {
-        parent = grid.transform;
-    }
-
-    itemSlot = new ItemSlot[slotCount];
-    for (int i = 0; i < itemSlot.Length; i++)
-    {
-        itemSlot[i] = Instantiate(slotPrefab, parent);
-    }
-}
-public void DeselectAllSlots()
-    {
-        foreach (ItemSlot slot in itemSlot)
+        ItemSlot slotPrefab = Resources.Load<ItemSlot>("ItemSlot");
+        if (slotPrefab == null)
         {
-            slot.isItemSelected = false;
-            slot.isItemSelected = false;
+            Debug.LogError("ItemSlot prefab was not found in a Resources folder.", this);
+            itemSlot = new ItemSlot[0];
+            return;
         }
-        
+
+        // Put the slots inside the GridLayoutGroup container (InventorySlots), if there is one
+        Transform parent = InventoryCanvas.transform;
+        GridLayoutGroup grid = InventoryCanvas.GetComponentInChildren<GridLayoutGroup>(true);
+        if (grid != null)
+        {
+            parent = grid.transform;
+        }
+
+        itemSlot = new ItemSlot[slotCount];
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            itemSlot[i] = Instantiate(slotPrefab, parent);
+            itemSlot[i].Setup(this);
+        }
+    }
+
+    // Called by a slot when the player clicks on it
+    public void SelectSlot(ItemSlot slot)
+    {
+        // Only one slot can be selected at a time
+        if (selectedSlot != null)
+        {
+            selectedSlot.SetSelected(false);
+        }
+
+        selectedSlot = slot;
+        slot.SetSelected(true);
+
+        // Show the item on the details panel (right side)
+        if (detailsPanel != null)
+        {
+            detailsPanel.Show(slot.ItemDetails);
+        }
     }
 
     public void AddItem(ItemDetails item)
@@ -82,17 +96,6 @@ public void DeselectAllSlots()
             return;
         }
 
-        // First, try to stack the item onto a slot that already holds the same item
-        for (int i = 0; i < itemSlot.Length; i++)
-        {
-            if (itemSlot[i].CanStackWith(item.ItemName))
-            {
-                itemSlot[i].AddQuantity(item.Quantity);
-                return;
-            }
-        }
-
-        // Otherwise, put the item into the first empty slot
         for (int i = 0; i < itemSlot.Length; i++)
         {
             if (!itemSlot[i].isFull)
@@ -103,7 +106,5 @@ public void DeselectAllSlots()
         }
 
         Debug.LogWarning("Inventory is full, '" + item.ItemName + "' was lost.");
-        
     }
-    
 }
