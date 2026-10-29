@@ -24,6 +24,7 @@ namespace TopDownCharacter2D.Attacks.Range
 
         public void CreateImpactParticlesAtPosition(Vector3 position, RangedAttackConfig config)
         {
+            if (_impactParticleSystem == null) return;
             _impactParticleSystem.transform.position = position;
             ParticleSystem.EmissionModule em = _impactParticleSystem.emission;
             em.SetBurst(0, new ParticleSystem.Burst(0, Mathf.Ceil(config.size * 5f)));

@@ -8,6 +8,42 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2041523821, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2041523822, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615392, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615394, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615395, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615397, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615398, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615448, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615449, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 977709029691615450, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -56,8 +92,46 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy_Contact Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615451, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 977709029691615455, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 977709029691615451, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+      insertIndex: 1
+      addedObject: {fileID: -8570882598966771303}
   m_SourcePrefab: {fileID: 100100000, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+--- !u!1 &4604524398793613404 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 977709029691615451, guid: be1be71e91157c44a9c3607e9cdea618, type: 3}
+  m_PrefabInstance: {fileID: 3636388030874617991}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &-8570882598966771303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4604524398793613404}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b69151256405b8844886ba1c9fe8f6db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TopDownEnemy
+  moveSpeed: 3
+  followRange: 10
+  stopDistance: 0.5
+  contactDamage: 15
+  jedaSerang: 0.5
+  maxHealth: 50
+  currentHealth: 50
+  warnaKenaHit: {r: 1, g: 0.3, b: 0.3, a: 0.9}
+  poinSaatMati: 20
+  knockBackPower: 3

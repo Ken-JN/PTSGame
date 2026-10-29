@@ -1,70 +1,84 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace TopDownCharacter2D.Health
 {
     /// <summary>
-    ///     This script allows an entity to deal contact damage to other entities with a given tag
+    ///     Skrip ini dipasang pada Musuh atau Bahaya (Spike/Jebakan).
+    ///     Ketika menyentuh Player, skrip ini akan otomatis memberikan damage ke Player.
     /// </summary>
     public class ChangeHealthOnTouch : MonoBehaviour
     {
-        [Tooltip("The health change on contact (must be negative for damages)")] [SerializeField]
-        private float value;
+        [Header("Pengaturan Damage Kontak")]
+        [Tooltip("Jumlah pengurangan darah saat menyentuh target")]
+        [FormerlySerializedAs("value")]
+        [SerializeField] private float damage = 15f;
 
-        [Tooltip("The tag of the target of the health change")] [SerializeField]
-        private string targetTag;
+        [Tooltip("Tag target yang boleh diserang")]
+        [SerializeField] private string targetTag = "Player";
 
-        private HealthSystem _collidingTargetHealthSystem;
-        private TopDownKnockBack _collidingTargetKnockBackSystem;
+        [Tooltip("Jeda waktu antar serangan jika musuh terus menempel pada player (dalam detik)")]
+        [SerializeField] private float jedaSerang = 0.5f;
 
-        private bool _isCollidingWithTarget;
+        private float _waktuTerakhirSerang = -999f;
 
-        private void FixedUpdate()
+        // 1. Deteksi melalui Trigger (jika collider dicentang Is Trigger)
+        private void OnTriggerEnter2D(Collider2D other)
         {
-            if (_isCollidingWithTarget)
-            {
-                ApplyHealthChange();
-            }
+            BeriDamageKeTarget(other.gameObject);
         }
 
-        private void OnTriggerEnter2D(Collider2D collision)
+        private void OnTriggerStay2D(Collider2D other)
         {
-            GameObject receiver = collision.gameObject;
+            BeriDamageKeTarget(other.gameObject);
+        }
 
-            if (!receiver.CompareTag(targetTag))
+        // 2. Deteksi melalui Tabrakan Fisik (Collider Biasa)
+        private void OnCollisionEnter2D(Collision2D collision)
+        {
+            BeriDamageKeTarget(collision.gameObject);
+        }
+
+        private void OnCollisionStay2D(Collision2D collision)
+        {
+            BeriDamageKeTarget(collision.gameObject);
+        }
+
+        // 3. Fungsi utama memberikan damage
+        private void BeriDamageKeTarget(GameObject target)
+        {
+            // Periksa apakah target memiliki Tag 'Player'
+            if (!target.CompareTag(targetTag)) return;
+
+            // Periksa apakah jeda waktu antar serangan sudah cukup
+            if (Time.time < _waktuTerakhirSerang + jedaSerang) return;
+
+            float damageDiberikan = Mathf.Abs(damage) > 0 ? Mathf.Abs(damage) : 15f;
+
+            // 1. Cek TopDownPlayerMaster terlebih dahulu
+            TopDownPlayerMaster playerMaster = target.GetComponentInParent<TopDownPlayerMaster>();
+            if (playerMaster != null && playerMaster.enabled)
             {
+                playerMaster.KurangiDarah(damageDiberikan);
+                _waktuTerakhirSerang = Time.time;
                 return;
             }
 
-            _collidingTargetHealthSystem = receiver.GetComponent<HealthSystem>();
-            if (_collidingTargetHealthSystem != null)
+            // 2. Cek interface IDamageable
+            IDamageable damageable = target.GetComponentInParent<IDamageable>();
+            if (damageable != null)
             {
-                _isCollidingWithTarget = true;
-            }
-
-            _collidingTargetKnockBackSystem = receiver.GetComponent<TopDownKnockBack>();
-        }
-
-
-        private void OnTriggerExit2D(Collider2D collision)
-        {
-            if (!collision.CompareTag(targetTag))
-            {
+                damageable.KenaDamage((int)damageDiberikan);
+                _waktuTerakhirSerang = Time.time;
                 return;
             }
 
-            _isCollidingWithTarget = false;
-        }
-
-        /// <summary>
-        ///     Apply the change of health to the target
-        /// </summary>
-        private void ApplyHealthChange()
-        {
-            bool hasBeenChanged = _collidingTargetHealthSystem.ChangeHealth(value);
-
-            if (_collidingTargetKnockBackSystem != null && hasBeenChanged)
+            // 3. Fallback ke HealthSystem
+            HealthSystem hpSystem = target.GetComponentInParent<HealthSystem>();
+            if (hpSystem != null && hpSystem.enabled)
             {
-                _collidingTargetKnockBackSystem.ApplyKnockBack(transform);
+                hpSystem.KurangiDarah(damageDiberikan);
+                _waktuTerakhirSerang = Time.time;
             }
         }
     }

@@ -2,56 +2,83 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+/// <summary>
+///     SKRIP PENGELOLA INVENTORY (INVENTORY MANAGER)
+///     - Membuka dan menutup panel Inventory saat menekan tombol "I"
+///     - Menyimpan item yang diambil oleh player
+///     - Menampilkan detail item saat slot diklik
+/// </summary>
 public class InventoryManager : MonoBehaviour, GrabableItem
 {
-    InputAction inventoryAction;
+    private InputAction inventoryAction;
     [SerializeField] private GameObject InventoryCanvas;
     [SerializeField] private int slotCount = 16;
     [SerializeField] private ItemDetailsPanel detailsPanel;
-    private bool InventoryActive;
+    private bool InventoryActive = false;
     private ItemSlot selectedSlot;
     public ItemSlot[] itemSlot;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         CreateSlots();
-        InventoryCanvas.SetActive(false);
-        inventoryAction = InputSystem.actions.FindAction("Inventory");
-        InventoryActive = false;
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (inventoryAction.triggered && InventoryCanvas != null && InventoryActive == false)
+        if (InventoryCanvas != null)
         {
-            InventoryActive = true;
-            Time.timeScale = 0f;
-            Debug.Log("Inventory is active");
-            InventoryCanvas.SetActive(true);
-        } else if (inventoryAction.triggered && InventoryCanvas != null && InventoryActive == true)
-        {
-            InventoryActive = false;
-            Time.timeScale = 1f;
-            Debug.Log("Inventory is deactivated");
             InventoryCanvas.SetActive(false);
+        }
+
+        if (InputSystem.actions != null)
+        {
+            inventoryAction = InputSystem.actions.FindAction("Inventory");
         }
     }
 
-    // Build the slot objects at runtime so no manual wiring is needed in the scene
+    void Update()
+    {
+        // Deteksi apakah tombol I ditekan atau action Inventory dipicu
+        bool ditekan = false;
+        if (inventoryAction != null && inventoryAction.triggered)
+        {
+            ditekan = true;
+        }
+        else if (Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame)
+        {
+            ditekan = true;
+        }
+
+        if (ditekan && InventoryCanvas != null)
+        {
+            if (!InventoryActive)
+            {
+                // Buka Inventory
+                InventoryActive = true;
+                Time.timeScale = 0f; // Pause game saat inventory terbuka
+                Debug.Log("<color=cyan>[INVENTORY]</color> Inventory Dibuka!");
+                InventoryCanvas.SetActive(true);
+            }
+            else
+            {
+                // Tutup Inventory
+                InventoryActive = false;
+                Time.timeScale = 1f; // Lanjutkan game
+                Debug.Log("<color=cyan>[INVENTORY]</color> Inventory Ditutup!");
+                InventoryCanvas.SetActive(false);
+            }
+        }
+    }
+
+    // Membuat slot secara otomatis di dalam grid layout
     private void CreateSlots()
     {
+        if (InventoryCanvas == null) return;
+
         ItemSlot slotPrefab = Resources.Load<ItemSlot>("ItemSlot");
         if (slotPrefab == null)
         {
-            Debug.LogError("ItemSlot prefab was not found in a Resources folder.", this);
+            Debug.LogError("Prefab ItemSlot tidak ditemukan di folder Resources.", this);
             itemSlot = new ItemSlot[0];
             return;
         }
 
-        // Put the slots inside the GridLayoutGroup container (InventorySlots), if there is one
         Transform parent = InventoryCanvas.transform;
         GridLayoutGroup grid = InventoryCanvas.GetComponentInChildren<GridLayoutGroup>(true);
         if (grid != null)
@@ -67,10 +94,9 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         }
     }
 
-    // Called by a slot when the player clicks on it
+    // Dipanggil saat pemain mengklik salah satu slot item
     public void SelectSlot(ItemSlot slot)
     {
-        // Only one slot can be selected at a time
         if (selectedSlot != null)
         {
             selectedSlot.SetSelected(false);
@@ -79,20 +105,21 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         selectedSlot = slot;
         slot.SetSelected(true);
 
-        // Show the item on the details panel (right side)
+        // Tampilkan detail item di panel kanan
         if (detailsPanel != null)
         {
             detailsPanel.Show(slot.ItemDetails);
         }
     }
 
+    // Menambahkan item yang diambil ke slot yang masih kosong
     public void AddItem(ItemDetails item)
     {
-        Debug.Log("Item added to inventory: " + item.ItemName + " Quantity: " + item.Quantity);
+        Debug.Log($"<color=green>[ITEM DIKUASAI]</color> {item.ItemName} masuk ke inventory!");
 
         if (itemSlot == null || itemSlot.Length == 0)
         {
-            Debug.LogWarning("Inventory has no slots, '" + item.ItemName + "' was lost.");
+            Debug.LogWarning("Inventory tidak memiliki slot!");
             return;
         }
 
@@ -105,6 +132,6 @@ public class InventoryManager : MonoBehaviour, GrabableItem
             }
         }
 
-        Debug.LogWarning("Inventory is full, '" + item.ItemName + "' was lost.");
+        Debug.LogWarning("Inventory penuh!");
     }
 }

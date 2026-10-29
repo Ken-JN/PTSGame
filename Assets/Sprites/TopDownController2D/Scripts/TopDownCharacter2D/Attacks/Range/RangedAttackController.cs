@@ -22,6 +22,7 @@ namespace TopDownCharacter2D.Attacks.Range
         private ProjectileManager _projectileManager;
 
         private bool fxOnDestroy = true;
+        private bool _hasHit = false;
 
         private bool DestroyOnHit { get; set; } = true;
 
@@ -53,8 +54,10 @@ namespace TopDownCharacter2D.Attacks.Range
 
         private void OnTriggerEnter2D(Collider2D other)
         {
+            if (_hasHit) return;
             if (levelCollisionLayer.value == (levelCollisionLayer.value | (1 << other.gameObject.layer)))
             {
+                _hasHit = true;
                 if (DestroyOnHit)
                 {
                     DestroyProjectile(other.ClosestPoint(transform.position) - _direction * .2f, fxOnDestroy);
@@ -62,14 +65,37 @@ namespace TopDownCharacter2D.Attacks.Range
             }
             else if (_config.target.value == (_config.target.value | (1 << other.gameObject.layer)))
             {
-                HealthSystem health = other.gameObject.GetComponent<HealthSystem>();
-                if (health != null)
+                _hasHit = true;
+                TopDownEnemy enemyMaster = other.gameObject.GetComponentInParent<TopDownEnemy>();
+                if (enemyMaster != null && enemyMaster.enabled)
                 {
-                    health.ChangeHealth(-_config.power);
-                    TopDownKnockBack knockBack = other.gameObject.GetComponent<TopDownKnockBack>();
-                    if (knockBack != null)
+                    enemyMaster.ApplyKnockBack(transform);
+                    enemyMaster.KenaDamage(Mathf.RoundToInt(_config.power));
+                }
+                else
+                {
+                    IDamageable damageable = other.gameObject.GetComponentInParent<IDamageable>();
+                    if (damageable != null)
                     {
-                        knockBack.ApplyKnockBack(transform);
+                        damageable.KenaDamage(Mathf.RoundToInt(_config.power));
+                        TopDownKnockBack knockBack = other.gameObject.GetComponent<TopDownKnockBack>();
+                        if (knockBack != null)
+                        {
+                            knockBack.ApplyKnockBack(transform);
+                        }
+                    }
+                    else
+                    {
+                        HealthSystem health = other.gameObject.GetComponent<HealthSystem>();
+                        if (health != null && health.enabled)
+                        {
+                            health.ChangeHealth(-_config.power);
+                            TopDownKnockBack knockBack = other.gameObject.GetComponent<TopDownKnockBack>();
+                            if (knockBack != null)
+                            {
+                                knockBack.ApplyKnockBack(transform);
+                            }
+                        }
                     }
                 }
 
@@ -96,6 +122,7 @@ namespace TopDownCharacter2D.Attacks.Range
             _currentDuration = 0f;
             _spriteRenderer.color = config.projectileColor;
 
+            _hasHit = false;
             _isReady = true;
         }
 

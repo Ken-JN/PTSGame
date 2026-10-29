@@ -22,11 +22,10 @@ public class Enemy : MonoBehaviour, IDamageable
     private StateZombie state = StateZombie.IDLE;
     private float waktuSerangTerakhir;
 
-    // PELAJARAN 3 — event di game: zombie yang mati memberitahu siapa pun yang sedang langganan.
-    // Action<Enemy> = delegate siap pakai, parameter-nya adalah zombie yang mati.
+    // Event saat zombie mati
     public static event Action<Enemy> OnZombieMati;
 
-    [SerializeField] private int damageSaatTabrakan = 10;
+    [SerializeField] private int damageSaatTabrakan = 15;
 
     protected virtual void Start()
     {
@@ -101,13 +100,10 @@ public class Enemy : MonoBehaviour, IDamageable
 
     void PerilakuIdle()
     {
-        Debug.Log("Enemy sedang IDLE");
     }
 
     void PerilakuPatrol()
     {
-        Debug.Log("Enemy sedang PATROL");
-
         transform.position = Vector2.MoveTowards(
             transform.position,
             tujuanPatrol,
@@ -123,13 +119,10 @@ public class Enemy : MonoBehaviour, IDamageable
     void PerilakuChase()
     {
         Kejar();
-        Debug.Log("Enemy sedang CHASE");
     }
 
     void PerilakuAttack()
     {
-        Debug.Log("Enemy sedang ATTACK");
-
         if (Time.time >= waktuSerangTerakhir + JedaSerang)
         {
             Serang();
@@ -141,7 +134,6 @@ public class Enemy : MonoBehaviour, IDamageable
     {
         hp -= damage;
         Debug.Log("Enemy kena damage: " + damage + ", HP sekarang: " + hp);
-
 
         if (hp <= 0)
         {
@@ -164,13 +156,27 @@ public class Enemy : MonoBehaviour, IDamageable
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        SerangPlayerDanHancur(other.gameObject);
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        SerangPlayerDanHancur(collision.gameObject);
+    }
+
+    private void SerangPlayerDanHancur(GameObject target)
+    {
+        if (target.CompareTag("Player"))
         {
-            IDamageable playerScript = other.GetComponent<IDamageable>();
+            IDamageable playerScript = target.GetComponentInParent<IDamageable>();
             if (playerScript != null)
             {
                 playerScript.KenaDamage(damageSaatTabrakan);
             }
+
+            // Sesuai syarat tugas: Ketika sudah menyerang musuh akan hancur
+            Debug.Log($"<color=yellow>{gameObject.name} hancur setelah menyerang player!</color>");
+            Destroy(gameObject);
         }
     }
 }

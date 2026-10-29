@@ -19,22 +19,39 @@ namespace TopDownCharacter2D.UI
 
         private void Awake()
         {
-            _entityHealth = entityObject.GetComponent<HealthSystem>();
+            if (entityObject == null)
+            {
+                entityObject = gameObject;
+            }
+
+            _entityHealth = entityObject.GetComponentInParent<HealthSystem>();
+
+            if (healthSlider == null)
+            {
+                healthSlider = GetComponent<Slider>();
+            }
         }
 
         private void Start()
         {
-            _entityHealth.OnDamage.AddListener(UpdateHealth);
-            _entityHealth.OnHeal.AddListener(UpdateHealth);
+            if (_entityHealth != null)
+            {
+                _entityHealth.OnDamage.AddListener(UpdateHealth);
+                _entityHealth.OnHeal.AddListener(UpdateHealth);
+                UpdateHealth();
+            }
         }
 
         /// <summary>
         ///     Updates the health bar slider's value
         /// </summary>
-        private void UpdateHealth()
+        public void UpdateHealth()
         {
-            healthSlider.value = _entityHealth.CurrentHealth / _entityHealth.MaxHealth;
-            onHealthUpdate.Invoke();
+            if (_entityHealth != null && healthSlider != null && _entityHealth.MaxHealth > 0)
+            {
+                healthSlider.value = _entityHealth.CurrentHealth / _entityHealth.MaxHealth;
+                onHealthUpdate.Invoke();
+            }
         }
     }
 }

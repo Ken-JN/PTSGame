@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Coin
   - Enemy
+  - GoldKey
+  - FakeKey
   layers:
   - Default
   - TransparentFX
