@@ -2,41 +2,42 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 /// <summary>
-///     SPAWNER MUSUH (ENEMY SPAWNER) BERBASIS RADIUS
-///     Memunculkan musuh secara berkala di dalam area radius lingkaran.
+///     RADIUS-BASED ENEMY SPAWNER
+///     Periodically spawns enemies within a circular radius arena.
 /// </summary>
 public class EnemySpawner : MonoBehaviour
 {
     [Header("=== 1. PREFAB & TARGET ===")]
-    [Tooltip("Prefab musuh yang akan dimunculkan")]
+    [Tooltip("Enemy prefab to instantiate")]
     public GameObject enemyPrefab;
 
-    [Tooltip("Pusat area spawn: jika dicentang, radius berpusat pada Player. Jika tidak, berpusat pada GameObject Spawner ini.")]
-    public bool spawnDiSekitarPlayer = true;
+    [Tooltip("Center of spawn area: if true, centers around the Player. If false, centers around this Spawner GameObject.")]
+    [FormerlySerializedAs("spawnDiSekitarPlayer")]
+    public bool spawnAroundPlayer = true;
 
-    [Header("=== 2. PENGATURAN RADIUS ===")]
-    [Tooltip("Radius maksimal area spawn musuh (jarak terjauh dari pusat)")]
+    [Header("=== 2. RADIUS SETTINGS ===")]
+    [Tooltip("Maximum radius for spawning enemies (furthest distance from center)")]
     [FormerlySerializedAs("spawnDistance")]
     public float spawnRadius = 8f;
 
-    [Tooltip("Radius minimal area spawn (jarak aman agar musuh tidak langsung muncul tepat di badan player)")]
+    [Tooltip("Minimum radius for spawning enemies (safe distance so enemies do not spawn right on top of player)")]
     public float minSpawnRadius = 3f;
 
-    [Header("=== 3. WAKTU & BATASAN ===")]
-    [Tooltip("Jeda waktu antar pemunculan musuh dalam detik")]
+    [Header("=== 3. TIMING & LIMITS ===")]
+    [Tooltip("Spawn interval in seconds between enemy waves")]
     public float spawnInterval = 3f;
 
-    [Tooltip("Batas maksimal jumlah musuh aktif yang ada di arena")]
+    [Tooltip("Maximum number of alive enemies allowed in the arena at once")]
     public int maxEnemies = 15;
 
-    // Referensi internal
+    // Internal references
     private Transform playerTarget;
     private float nextSpawnTime = 0f;
 
     private void Start()
     {
-        CariPlayer();
-        // Langsung spawn di awal permainan tanpa menunggu jeda pertama
+        FindPlayer();
+        // Spawn immediately on start
         nextSpawnTime = Time.time;
     }
 
@@ -44,19 +45,19 @@ public class EnemySpawner : MonoBehaviour
     {
         if (enemyPrefab == null) return;
 
-        // Jika player belum ditemukan, coba cari lagi
-        if (spawnDiSekitarPlayer && playerTarget == null)
+        // Find player if reference is null
+        if (spawnAroundPlayer && playerTarget == null)
         {
-            CariPlayer();
+            FindPlayer();
             if (playerTarget == null) return;
         }
 
-        // Cek apakah sudah waktunya memunculkan musuh
+        // Check if it is time to spawn
         if (Time.time >= nextSpawnTime)
         {
             nextSpawnTime = Time.time + spawnInterval;
 
-            // Hitung jumlah musuh yang saat ini masih hidup di arena
+            // Check current alive enemy count in the scene
             int currentEnemyCount = GameObject.FindGameObjectsWithTag("Enemy").Length;
             if (currentEnemyCount < maxEnemies)
             {
@@ -66,9 +67,9 @@ public class EnemySpawner : MonoBehaviour
     }
 
     /// <summary>
-    ///     Mencari GameObject Player di dalam scene menggunakan Tag "Player"
+    ///     Finds the Player GameObject in the scene using tag "Player"
     /// </summary>
-    private void CariPlayer()
+    public void FindPlayer()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
@@ -78,57 +79,57 @@ public class EnemySpawner : MonoBehaviour
     }
 
     /// <summary>
-    ///     Memunculkan musuh di posisi acak dalam radius lingkaran
+    ///     Spawns an enemy at a random position within the circular ring
     /// </summary>
-    private void SpawnEnemy()
+    public void SpawnEnemy()
     {
-        // 1. Tentukan titik pusat spawn (posisi player atau posisi spawner ini)
-        Vector3 titikPusat = (spawnDiSekitarPlayer && playerTarget != null) 
+        // 1. Determine center position
+        Vector3 center = (spawnAroundPlayer && playerTarget != null) 
             ? playerTarget.position 
             : transform.position;
 
-        // 2. Hitung arah sudut acak dan jarak acak dalam rentang [minSpawnRadius, spawnRadius]
-        Vector2 arahAcak = Random.insideUnitCircle.normalized;
-        float jarakAcak = Random.Range(minSpawnRadius, spawnRadius);
+        // 2. Calculate random direction and distance in [minSpawnRadius, spawnRadius]
+        Vector2 randomDir = Random.insideUnitCircle.normalized;
+        float randomDist = Random.Range(minSpawnRadius, spawnRadius);
 
-        // 3. Gabungkan menjadi posisi koordinat spawn
-        Vector3 posisiSpawn = titikPusat + new Vector3(arahAcak.x, arahAcak.y, 0f) * jarakAcak;
+        // 3. Compose spawn position
+        Vector3 spawnPos = center + new Vector3(randomDir.x, randomDir.y, 0f) * randomDist;
 
-        // 4. Munculkan musuh
-        GameObject musuhBaru = Instantiate(enemyPrefab, posisiSpawn, Quaternion.identity);
-        musuhBaru.name = "Enemy_Spawned";
-        musuhBaru.tag = "Enemy";
+        // 4. Instantiate enemy
+        GameObject newEnemy = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
+        newEnemy.name = "Enemy_Spawned";
+        newEnemy.tag = "Enemy";
 
         int enemyLayer = LayerMask.NameToLayer("Enemy");
         if (enemyLayer != -1)
         {
-            musuhBaru.layer = enemyLayer;
+            newEnemy.layer = enemyLayer;
         }
 
-        // Pastikan musuh menggunakan skrip tunggal TopDownEnemy
-        if (musuhBaru.GetComponent<TopDownEnemy>() == null)
+        // Ensure enemy has TopDownEnemy component attached
+        if (newEnemy.GetComponent<TopDownEnemy>() == null)
         {
-            musuhBaru.AddComponent<TopDownEnemy>();
+            newEnemy.AddComponent<TopDownEnemy>();
         }
 
-        Debug.Log($"<color=cyan>[SPAWNER]</color> Musuh muncul di koordinat: {posisiSpawn} (Jarak dari pusat: {jarakAcak:F1} meter)");
+        Debug.Log($"<color=cyan>[SPAWNER]</color> Enemy spawned at: {spawnPos} (Distance: {randomDist:F1}m)");
     }
 
     /// <summary>
-    ///     Menampilkan visual lingkaran radius di Scene View Unity agar mudah dilihat
+    ///     Draws gizmo circles in Scene view for visual debugging
     /// </summary>
     private void OnDrawGizmosSelected()
     {
-        Vector3 pusat = (spawnDiSekitarPlayer && Application.isPlaying && playerTarget != null) 
+        Vector3 center = (spawnAroundPlayer && Application.isPlaying && playerTarget != null) 
             ? playerTarget.position 
             : transform.position;
 
-        // Lingkaran luar (Spawn Radius Maksimal) - Warna Merah
+        // Outer circle (Max spawn radius) - Red
         Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.7f);
-        Gizmos.DrawWireSphere(pusat, spawnRadius);
+        Gizmos.DrawWireSphere(center, spawnRadius);
 
-        // Lingkaran dalam (Radius Minimal / Zona Aman) - Warna Kuning
+        // Inner circle (Min spawn radius / safe zone) - Yellow
         Gizmos.color = new Color(1f, 0.92f, 0.016f, 0.7f);
-        Gizmos.DrawWireSphere(pusat, minSpawnRadius);
+        Gizmos.DrawWireSphere(center, minSpawnRadius);
     }
 }

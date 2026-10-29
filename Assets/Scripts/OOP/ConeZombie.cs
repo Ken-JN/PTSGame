@@ -4,8 +4,8 @@ public class ConeZombie : Enemy
 {
     public bool cone = true;
 
-    public override void Serang()
+    public override void Attack()
     {
-        Debug.Log("Cone Gigit");
+        Debug.Log("Cone Bites");
     }
 }

@@ -70,14 +70,14 @@ namespace TopDownCharacter2D.Attacks.Range
                 if (enemyMaster != null && enemyMaster.enabled)
                 {
                     enemyMaster.ApplyKnockBack(transform);
-                    enemyMaster.KenaDamage(Mathf.RoundToInt(_config.power));
+                    enemyMaster.TakeDamage(Mathf.RoundToInt(_config.power));
                 }
                 else
                 {
                     IDamageable damageable = other.gameObject.GetComponentInParent<IDamageable>();
                     if (damageable != null)
                     {
-                        damageable.KenaDamage(Mathf.RoundToInt(_config.power));
+                        damageable.TakeDamage(Mathf.RoundToInt(_config.power));
                         TopDownKnockBack knockBack = other.gameObject.GetComponent<TopDownKnockBack>();
                         if (knockBack != null)
                         {

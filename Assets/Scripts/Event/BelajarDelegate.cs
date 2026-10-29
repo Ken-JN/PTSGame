@@ -3,54 +3,50 @@ using UnityEngine;
 
 public class BelajarDelegate : MonoBehaviour
 {
+    private delegate void SimpleAction();
 
-    delegate void AksiSederhana();
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        ContohAction1();
-        ContohAction2();
-        ContohAction3();
+        ExampleAction1();
+        ExampleAction2();
+        ExampleAction3();
     }
 
-    // Update is called once per frame
     void Update()
     {
-
     }
 
-    void ContohAction1()
+    void ExampleAction1()
     {
-        AksiSederhana aksi = TulisHalo;
-        aksi();
+        SimpleAction action = WriteHello;
+        action();
     }
 
-    void ContohAction2()
+    void ExampleAction2()
     {
-        AksiSederhana aksi = TulisHalo;
-        aksi += TulisDunia;
-        aksi();
+        SimpleAction action = WriteHello;
+        action += WriteWorld;
+        action();
     }
 
-    void ContohAction3()
+    void ExampleAction3()
     {
-        Action aksi = TulisHalo;
-        aksi += TulisSigma;
-        aksi();
-
+        Action action = WriteHello;
+        action += WriteSigma;
+        action();
     }
 
-    void TulisDunia()
+    void WriteWorld()
     {
-        Debug.Log("Dunia");
+        Debug.Log("World");
     }
 
-    void TulisHalo()
+    void WriteHello()
     {
-        Debug.Log("Halo");
+        Debug.Log("Hello");
     }
 
-    void TulisSigma()
+    void WriteSigma()
     {
         Debug.Log("Sigma");
     }

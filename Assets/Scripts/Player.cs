@@ -344,7 +344,7 @@ public class Player : MonoBehaviour, IDamageable
             if (hit.collider != null && hit.collider.CompareTag("Enemy"))
             {
                 IDamageable enemy = hit.collider.GetComponentInParent<IDamageable>();
-                if (enemy != null) enemy.KenaDamage((int)meleeDamage);
+                if (enemy != null) enemy.TakeDamage((int)meleeDamage);
             }
         }
 
@@ -367,7 +367,7 @@ public class Player : MonoBehaviour, IDamageable
             if (hit.CompareTag("Enemy"))
             {
                 IDamageable enemy = hit.GetComponentInParent<IDamageable>();
-                if (enemy != null) enemy.KenaDamage((int)meleeDamage);
+                if (enemy != null) enemy.TakeDamage((int)meleeDamage);
             }
         }
     }
@@ -375,9 +375,9 @@ public class Player : MonoBehaviour, IDamageable
     // ========================================================
     // 5. HEALTH, DAMAGE, KNOCKBACK & DEATH
     // ========================================================
-    public void KenaDamage(int damage)
+    public void TakeDamage(int damage)
     {
-        TakeDamage(damage);
+        TakeDamage((float)damage);
     }
 
     public void TakeDamage(float damage)
@@ -524,7 +524,7 @@ public class Player : MonoBehaviour, IDamageable
 
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.AmbilKoin();
+                GameManager.Instance.CollectCoin();
             }
         }
         else if (other.CompareTag("GoldKey") && other.GetComponent<Item>() == null)
@@ -532,7 +532,7 @@ public class Player : MonoBehaviour, IDamageable
             Destroy(other.gameObject);
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.KumpulkanKunciEmas();
+                GameManager.Instance.CollectGoldKey();
             }
         }
         else if (other.CompareTag("FakeKey") && other.GetComponent<Item>() == null)
@@ -540,7 +540,7 @@ public class Player : MonoBehaviour, IDamageable
             Destroy(other.gameObject);
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.KumpulkanKunciKw();
+                GameManager.Instance.CollectFakeKey();
             }
         }
     }

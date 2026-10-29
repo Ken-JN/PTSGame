@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using System;
 
 public class Enemy : MonoBehaviour, IDamageable
@@ -9,23 +10,30 @@ public class Enemy : MonoBehaviour, IDamageable
     protected Transform player;
 
     [Header("State Machine")]
-    [SerializeField] private float JarakDeteksi = 6f;
-    [SerializeField] private float JarakSerang = 1.5f;
-    [SerializeField] private float JedaSerang = 0.3f;
+    [FormerlySerializedAs("JarakDeteksi")]
+    [SerializeField] private float detectionRange = 6f;
+
+    [FormerlySerializedAs("JarakSerang")]
+    [SerializeField] private float attackRange = 1.5f;
+
+    [FormerlySerializedAs("JedaSerang")]
+    [SerializeField] private float attackCooldown = 0.3f;
 
     [Header("Patrol")]
-    [SerializeField] private float radiusPatrol = 3f;
-    private Vector2 titikAwal;
-    private Vector2 tujuanPatrol;
+    [FormerlySerializedAs("radiusPatrol")]
+    [SerializeField] private float patrolRadius = 3f;
+    private Vector2 startingPoint;
+    private Vector2 patrolDestination;
 
-    // State Now
+    // Current State
     private StateZombie state = StateZombie.IDLE;
-    private float waktuSerangTerakhir;
+    private float lastAttackTime;
 
-    // Event saat zombie mati
-    public static event Action<Enemy> OnZombieMati;
+    // Event when zombie dies
+    public static event Action<Enemy> OnZombieDeath;
 
-    [SerializeField] private int damageSaatTabrakan = 15;
+    [FormerlySerializedAs("damageSaatTabrakan")]
+    [SerializeField] private int collisionDamage = 15;
 
     protected virtual void Start()
     {
@@ -35,38 +43,38 @@ public class Enemy : MonoBehaviour, IDamageable
             player = playerObj.transform;
         }
 
-        titikAwal = transform.position;
-        PilihTujuanPatrolBaru();
+        startingPoint = transform.position;
+        ChooseNewPatrolDestination();
     }
 
     void Update()
     {
-        PeriksaTransisi();
+        CheckStateTransitions();
 
         switch (state)
         {
-            case StateZombie.IDLE: PerilakuIdle(); break;
-            case StateZombie.PATROL: PerilakuPatrol(); break;
-            case StateZombie.CHASE: PerilakuChase(); break;
-            case StateZombie.ATTACK: PerilakuAttack(); break;
+            case StateZombie.IDLE: IdleBehavior(); break;
+            case StateZombie.PATROL: PatrolBehavior(); break;
+            case StateZombie.CHASE: ChaseBehavior(); break;
+            case StateZombie.ATTACK: AttackBehavior(); break;
         }
     }
 
-    public float JarakKePlayer()
+    public float DistanceToPlayer()
     {
         if (player == null) return Mathf.Infinity;
         return Vector2.Distance(transform.position, player.position);
     }
 
-    void PeriksaTransisi()
+    void CheckStateTransitions()
     {
-        float jarak = JarakKePlayer();
+        float distance = DistanceToPlayer();
 
-        if (jarak <= JarakSerang)
+        if (distance <= attackRange)
         {
             state = StateZombie.ATTACK;
         }
-        else if (jarak <= JarakDeteksi)
+        else if (distance <= detectionRange)
         {
             state = StateZombie.CHASE;
         }
@@ -76,13 +84,13 @@ public class Enemy : MonoBehaviour, IDamageable
         }
     }
 
-    void PilihTujuanPatrolBaru()
+    void ChooseNewPatrolDestination()
     {
-        Vector2 acak = UnityEngine.Random.insideUnitCircle * radiusPatrol;
-        tujuanPatrol = titikAwal + acak;
+        Vector2 randomOffset = UnityEngine.Random.insideUnitCircle * patrolRadius;
+        patrolDestination = startingPoint + randomOffset;
     }
 
-    public void Kejar()
+    public void Chase()
     {
         if (player == null) return;
 
@@ -93,89 +101,88 @@ public class Enemy : MonoBehaviour, IDamageable
         );
     }
 
-    public virtual void Serang()
+    public virtual void Attack()
     {
-        Debug.Log("Enemy Serang");
+        Debug.Log("Enemy Attacks");
     }
 
-    void PerilakuIdle()
+    void IdleBehavior()
     {
     }
 
-    void PerilakuPatrol()
+    void PatrolBehavior()
     {
         transform.position = Vector2.MoveTowards(
             transform.position,
-            tujuanPatrol,
+            patrolDestination,
             ms * 0.5f * Time.deltaTime
         );
 
-        if (Vector2.Distance(transform.position, tujuanPatrol) < 0.1f)
+        if (Vector2.Distance(transform.position, patrolDestination) < 0.1f)
         {
-            PilihTujuanPatrolBaru();
+            ChooseNewPatrolDestination();
         }
     }
 
-    void PerilakuChase()
+    void ChaseBehavior()
     {
-        Kejar();
+        Chase();
     }
 
-    void PerilakuAttack()
+    void AttackBehavior()
     {
-        if (Time.time >= waktuSerangTerakhir + JedaSerang)
+        if (Time.time >= lastAttackTime + attackCooldown)
         {
-            Serang();
-            waktuSerangTerakhir = Time.time;
+            Attack();
+            lastAttackTime = Time.time;
         }
     }
 
-    public void KenaDamage(int damage)
+    public void TakeDamage(int damage)
     {
         hp -= damage;
-        Debug.Log("Enemy kena damage: " + damage + ", HP sekarang: " + hp);
+        Debug.Log($"Enemy took damage: {damage}, Current HP: {hp}");
 
         if (hp <= 0)
         {
-            Mati();
+            Die();
         }
     }
 
-    protected virtual void Mati()
+    protected virtual void Die()
     {
-        Debug.Log("Enemy mati!");
-        OnZombieMati?.Invoke(this);
+        Debug.Log("Enemy died!");
+        OnZombieDeath?.Invoke(this);
         Destroy(gameObject);
     }
 
-    [ContextMenu("Tes Event: Zombie Mati")]
-    void TesEventMati()
+    [ContextMenu("Test Event: Zombie Death")]
+    void TestDeathEvent()
     {
-        Mati();
+        Die();
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        SerangPlayerDanHancur(other.gameObject);
+        AttackPlayerAndSelfDestruct(other.gameObject);
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        SerangPlayerDanHancur(collision.gameObject);
+        AttackPlayerAndSelfDestruct(collision.gameObject);
     }
 
-    private void SerangPlayerDanHancur(GameObject target)
+    private void AttackPlayerAndSelfDestruct(GameObject target)
     {
         if (target.CompareTag("Player"))
         {
             IDamageable playerScript = target.GetComponentInParent<IDamageable>();
             if (playerScript != null)
             {
-                playerScript.KenaDamage(damageSaatTabrakan);
+                playerScript.TakeDamage(collisionDamage);
             }
 
-            // Sesuai syarat tugas: Ketika sudah menyerang musuh akan hancur
-            Debug.Log($"<color=yellow>{gameObject.name} hancur setelah menyerang player!</color>");
+            Debug.Log($"<color=yellow>{gameObject.name} destroyed after attacking player!</color>");
             Destroy(gameObject);
         }
     }

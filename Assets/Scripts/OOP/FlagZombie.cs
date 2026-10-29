@@ -4,8 +4,8 @@ public class FlagZombie : Enemy
 {
     public bool flag = true;
 
-    public override void Serang()
+    public override void Attack()
     {
-        Debug.Log("FlagZombie Gigit");
+        Debug.Log("FlagZombie Bites");
     }
 }

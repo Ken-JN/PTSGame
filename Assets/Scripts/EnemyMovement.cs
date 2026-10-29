@@ -126,7 +126,7 @@ public class EnemyMovement : MonoBehaviour, IDamageable
             IDamageable damageable = target.GetComponentInParent<IDamageable>();
             if (damageable != null)
             {
-                damageable.KenaDamage((int)attackDamage);
+                damageable.TakeDamage((int)attackDamage);
             }
         }
 
@@ -142,9 +142,9 @@ public class EnemyMovement : MonoBehaviour, IDamageable
     // ========================================================
     // 3. RECEIVING DAMAGE (IDamageable)
     // ========================================================
-    public void KenaDamage(int damageAmount)
+    public void TakeDamage(int damageAmount)
     {
-        TakeDamage(damageAmount);
+        TakeDamage((float)damageAmount);
     }
 
     public void TakeDamage(float damageAmount)

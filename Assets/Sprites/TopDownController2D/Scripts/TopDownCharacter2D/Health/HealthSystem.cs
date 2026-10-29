@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using TopDownCharacter2D.Controllers;
 using TopDownCharacter2D.Stats;
 
@@ -26,7 +27,8 @@ namespace TopDownCharacter2D.Health
         [SerializeField] private float currentHealth = 100f;
 
         [Tooltip("Invincibility duration in seconds after being hit to prevent multi-hits in 1 frame")]
-        [SerializeField] private float waktuKebal = 0.8f;
+        [FormerlySerializedAs("waktuKebal")]
+        [SerializeField] private float invincibilityDuration = 0.8f;
 
         [Header("3. Health Bar UI")]
         [Tooltip("Canvas holding the Slider (World Space above player or Screen Space on screen)")]
@@ -39,7 +41,8 @@ namespace TopDownCharacter2D.Health
         [SerializeField] private Image healthBarFill;
 
         [Tooltip("Position offset of health bar above character")]
-        [SerializeField] private Vector3 posisiBarDarah = new Vector3(0f, 1.2f, 0f);
+        [FormerlySerializedAs("posisiBarDarah")]
+        [SerializeField] private Vector3 healthBarOffset = new Vector3(0f, 1.2f, 0f);
 
         [Header("4. Events (Listened to by TopDownFx, Animations, and UI)")]
         [SerializeField] private UnityEvent onDamage;
@@ -69,7 +72,7 @@ namespace TopDownCharacter2D.Health
             // 1. Ensure game time runs normally on start / scene reload
             Time.timeScale = 1f;
 
-            // 2. Auto-detect tag (Hanya objek dengan tag Player yang dianggap Player)
+            // 2. Auto-detect tag (Only objects with tag Player are considered Player)
             if (CompareTag("Player"))
             {
                 isPlayer = true;
@@ -79,7 +82,7 @@ namespace TopDownCharacter2D.Health
                 isPlayer = false;
             }
 
-            // 3. Cache SpriteRenderer for damage flash (jangan ambil shadow)
+            // 3. Cache SpriteRenderer for damage flash (exclude shadows)
             SpriteRenderer[] allRenderers = GetComponentsInChildren<SpriteRenderer>(true);
             foreach (var sr in allRenderers)
             {
@@ -142,13 +145,13 @@ namespace TopDownCharacter2D.Health
                 healthSlider.maxValue = 1f;
             }
 
-            UpdateTampilanHealthBar();
+            UpdateHealthBarUI();
         }
 
         private void Update()
         {
             // Check invincibility timer
-            if (_isInvincible && Time.time >= _timeSinceLastDamage + waktuKebal)
+            if (_isInvincible && Time.time >= _timeSinceLastDamage + invincibilityDuration)
             {
                 _isInvincible = false;
                 onInvincibilityEnd.Invoke();
@@ -162,7 +165,7 @@ namespace TopDownCharacter2D.Health
             {
                 if (healthBarCanvas.renderMode == RenderMode.WorldSpace)
                 {
-                    healthBarCanvas.transform.position = transform.position + posisiBarDarah;
+                    healthBarCanvas.transform.position = transform.position + healthBarOffset;
                     healthBarCanvas.transform.rotation = Quaternion.identity;
                 }
             }
@@ -171,15 +174,15 @@ namespace TopDownCharacter2D.Health
         /// <summary>
         ///     IDamageable interface implementation
         /// </summary>
-        public void KenaDamage(int damage)
+        public void TakeDamage(int damage)
         {
             TopDownEnemy enemy = GetComponent<TopDownEnemy>();
             if (enemy != null && enemy.enabled)
             {
-                enemy.KenaDamage(damage);
+                enemy.TakeDamage(damage);
                 return;
             }
-            KurangiDarah(damage);
+            TakeDamage((float)damage);
         }
 
         /// <summary>
@@ -194,11 +197,11 @@ namespace TopDownCharacter2D.Health
             }
             if (change < 0)
             {
-                return KurangiDarah(Mathf.Abs(change));
+                return TakeDamage(Mathf.Abs(change));
             }
             else if (change > 0)
             {
-                return TambahDarah(change);
+                return Heal(change);
             }
             return false;
         }
@@ -206,26 +209,26 @@ namespace TopDownCharacter2D.Health
         /// <summary>
         ///     Applies damage to the character
         /// </summary>
-        public bool KurangiDarah(float jumlahDamage)
+        public bool TakeDamage(float damageAmount)
         {
             if (_isDead) return false;
 
             // Check invincibility timer
-            if (Time.time < _timeSinceLastDamage + waktuKebal)
+            if (Time.time < _timeSinceLastDamage + invincibilityDuration)
             {
                 return false; // Still invincible, ignore hit
             }
 
             _timeSinceLastDamage = Time.time;
             _isInvincible = true;
-            currentHealth -= jumlahDamage;
+            currentHealth -= damageAmount;
 
             if (currentHealth < 0)
             {
                 currentHealth = 0;
             }
 
-            Debug.Log($"<color=orange>[HIT]</color> {gameObject.name} took {jumlahDamage} damage! Remaining HP: {currentHealth}/{maxHealth}");
+            Debug.Log($"<color=orange>[HIT]</color> {gameObject.name} took {damageAmount} damage! Remaining HP: {currentHealth}/{maxHealth}");
 
             // 1. Visual flash effect
             if (gameObject.activeInHierarchy)
@@ -237,13 +240,13 @@ namespace TopDownCharacter2D.Health
             onDamage.Invoke();
 
             // 3. Update UI Slider
-            UpdateTampilanHealthBar();
+            UpdateHealthBarUI();
 
             // 4. IMPORTANT: Game DOES NOT freeze on damage!
             // Only when HP reaches 0 does the character die!
             if (currentHealth <= 0)
             {
-                ProsesKematian();
+                ProcessDeath();
             }
 
             return true;
@@ -262,22 +265,22 @@ namespace TopDownCharacter2D.Health
             }
         }
 
-        public bool TambahDarah(float jumlahHeal)
+        public bool Heal(float healAmount)
         {
             if (_isDead) return false;
 
-            currentHealth += jumlahHeal;
+            currentHealth += healAmount;
             if (currentHealth > maxHealth)
             {
                 currentHealth = maxHealth;
             }
 
-            UpdateTampilanHealthBar();
+            UpdateHealthBarUI();
             onHeal.Invoke();
             return true;
         }
 
-        private void ProsesKematian()
+        private void ProcessDeath()
         {
             if (_isDead) return;
             _isDead = true;
@@ -301,7 +304,7 @@ namespace TopDownCharacter2D.Health
                 }
 
                 // Disable player controllers & physics
-                MatikanKontrolPlayer();
+                DisablePlayerControls();
 
                 // Freeze game upon player death
                 Time.timeScale = 0f;
@@ -317,7 +320,7 @@ namespace TopDownCharacter2D.Health
             }
         }
 
-        private void MatikanKontrolPlayer()
+        private void DisablePlayerControls()
         {
             Rigidbody2D rb = GetComponent<Rigidbody2D>();
             if (rb != null)
@@ -341,22 +344,22 @@ namespace TopDownCharacter2D.Health
             if (playerInput != null) playerInput.enabled = false;
         }
 
-        public void UpdateTampilanHealthBar()
+        public void UpdateHealthBarUI()
         {
             if (!isPlayer || healthSlider == null) return;
 
-            float persentase = maxHealth > 0 ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
-            healthSlider.value = persentase;
+            float percentage = maxHealth > 0 ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
+            healthSlider.value = percentage;
 
             if (healthBarFill != null)
             {
-                if (persentase > 0.5f)
+                if (percentage > 0.5f)
                 {
-                    healthBarFill.color = Color.Lerp(Color.yellow, new Color(0.2f, 0.9f, 0.3f, 1f), (persentase - 0.5f) * 2f);
+                    healthBarFill.color = Color.Lerp(Color.yellow, new Color(0.2f, 0.9f, 0.3f, 1f), (percentage - 0.5f) * 2f);
                 }
                 else
                 {
-                    healthBarFill.color = Color.Lerp(new Color(0.9f, 0.15f, 0.15f, 1f), Color.yellow, persentase * 2f);
+                    healthBarFill.color = Color.Lerp(new Color(0.9f, 0.15f, 0.15f, 1f), Color.yellow, percentage * 2f);
                 }
             }
         }

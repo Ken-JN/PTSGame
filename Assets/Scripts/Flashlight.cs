@@ -1,19 +1,21 @@
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.Serialization;
 
 public class Flashlight : MonoBehaviour
 {
+    [Tooltip("Transform of the 2D Light component")]
+    public Transform playerLight;
 
-    public Transform playerLight; // Drag Transform Light 2D di Inspector
-    public float kecepatanRotasiLight = 15f;
-    private Vector2 arahTerakhirCahaya = Vector2.down;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Tooltip("Flashlight rotation smoothness speed")]
+    [FormerlySerializedAs("kecepatanRotasiLight")]
+    public float lightRotationSpeed = 15f;
+
+    private Vector2 lastLightDirection = Vector2.down;
+
     void Start()
     {
-        
     }
 
-    // Update is called once per frame
     void Update()
     {
         RotateLight();
@@ -23,17 +25,16 @@ public class Flashlight : MonoBehaviour
     {
         if (playerLight == null) return;
 
-        // Hitung sudut dari Vector2 arahTerakhirCahaya
-        float angle = Mathf.Atan2(arahTerakhirCahaya.y, arahTerakhirCahaya.x) * Mathf.Rad2Deg;
+        // Calculate angle from last light direction
+        float angle = Mathf.Atan2(lastLightDirection.y, lastLightDirection.x) * Mathf.Rad2Deg;
 
-        // Sesuaikan offset (-90f jika cahaya bawaan menghadap Atas pada Euler 0)
+        // Adjust rotation offset (-90f if default light sprite points upward at 0 degrees)
         Quaternion targetRotation = Quaternion.Euler(0f, 0f, angle - 90f);
 
         playerLight.rotation = Quaternion.Lerp(
             playerLight.rotation,
             targetRotation,
-            Time.deltaTime * kecepatanRotasiLight
+            Time.deltaTime * lightRotationSpeed
         );
-}
-
+    }
 }

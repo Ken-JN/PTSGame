@@ -2,10 +2,8 @@ using UnityEngine;
 
 public class EnemyChildren : Enemy
 {
-   
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public override void Serang()
+    public override void Attack()
     {
-        Debug.Log("Children Menyerang");
+        Debug.Log("Children Attacking");
     }
 }

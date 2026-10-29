@@ -1,21 +1,21 @@
 using UnityEngine;
 
-// PELAJARAN 2 — Event (si penerima)
-// Tempel ke GameObject LAIN (boleh Empty). Penerima tidak perlu kenal detail pemancar.
+// Lesson 2: Event (Receiver / Subscriber)
+// Attached to another GameObject. Receiver does not need to know emitter details.
 public class PenerimaEvent : MonoBehaviour
 {
     void OnEnable()
     {
-        PemancarEvent.OnTekanSpasi += Reaksi;
+        PemancarEvent.OnSpacePressed += OnEventTriggered;
     }
 
     void OnDisable()
     {
-        PemancarEvent.OnTekanSpasi -= Reaksi;
+        PemancarEvent.OnSpacePressed -= OnEventTriggered;
     }
 
-    void Reaksi()
+    void OnEventTriggered()
     {
-        Debug.Log("Penerima: aku dengar event spasi!");
+        Debug.Log("Receiver: Heard space event!");
     }
 }

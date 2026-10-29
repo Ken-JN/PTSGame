@@ -1,25 +1,25 @@
 using UnityEngine;
 
 /// <summary>
-///     Skrip yang dipasang pada objek collectible di arena game.
-///     Saat disentuh oleh Player, item akan masuk ke Inventory dan
-///     jika item tersebut adalah Kunci Emas atau Kunci KW, akan menambah progres kemenangan di GameManager.
+///     Attached to collectible item objects in the arena.
+///     When touched by the Player, the item is added to the Inventory and
+///     if it is a Gold Key or Fake Key, progresses the victory condition in GameManager.
 /// </summary>
 public class Item : MonoBehaviour
 {
-    [Header("Pengaturan Item")]
-    [Tooltip("Data item ScriptableObject (misal Koentji Emas atau Koentji KW)")]
+    [Header("Item Settings")]
+    [Tooltip("Item ScriptableObject data (e.g. Gold Key or Fake Key)")]
     [SerializeField] private ItemDetails ItemDetails;
     private GrabableItem itemCollector;
 
     private void Awake()
     {
-        CariInventoryCollector();
+        FindInventoryCollector();
     }
 
-    private void CariInventoryCollector()
+    private void FindInventoryCollector()
     {
-        // Cari komponen InventoryManager di scene yang mengimplementasikan GrabableItem
+        // Find InventoryManager component in the scene that implements GrabableItem
         foreach (MonoBehaviour component in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
         {
             if (component is GrabableItem collector)
@@ -36,37 +36,37 @@ public class Item : MonoBehaviour
         {
             if (ItemDetails != null)
             {
-                string namaItem = ItemDetails.ItemName.ToLower();
+                string itemName = ItemDetails.ItemName.ToLower();
 
-                // 1. Cek apakah ini Kunci KW
-                if (namaItem.Contains("kw") || namaItem.Contains("kawe") || CompareTag("FakeKey"))
+                // 1. Check if Fake / Silver Key
+                if (itemName.Contains("kw") || itemName.Contains("kawe") || itemName.Contains("fake") || CompareTag("FakeKey"))
                 {
                     if (GameManager.Instance != null)
                     {
-                        GameManager.Instance.KumpulkanKunciKw();
+                        GameManager.Instance.CollectFakeKey();
                     }
                 }
-                // 2. Cek apakah ini Kunci Emas
-                else if (namaItem.Contains("emas") || namaItem.Contains("gold") || CompareTag("GoldKey"))
+                // 2. Check if Gold Key
+                else if (itemName.Contains("emas") || itemName.Contains("gold") || CompareTag("GoldKey"))
                 {
                     if (GameManager.Instance != null)
                     {
-                        GameManager.Instance.KumpulkanKunciEmas();
+                        GameManager.Instance.CollectGoldKey();
                     }
                 }
-                // 3. Item lainnya (tambah poin umum)
+                // 3. Other items (general point reward)
                 else
                 {
                     if (GameManager.Instance != null)
                     {
-                        GameManager.Instance.TambahPoin(25);
+                        GameManager.Instance.AddPoints(25);
                     }
                 }
 
-                // 4. Masukkan ke Inventory
+                // 4. Add to Inventory
                 if (itemCollector == null)
                 {
-                    CariInventoryCollector();
+                    FindInventoryCollector();
                 }
 
                 if (itemCollector != null)
@@ -75,7 +75,7 @@ public class Item : MonoBehaviour
                 }
             }
 
-            // Hancurkan objek di arena setelah diambil
+            // Destroy collectible object in the arena upon pickup
             Destroy(gameObject);
         }
     }

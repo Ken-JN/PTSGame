@@ -4,58 +4,67 @@ using TMPro;
 
 /// <summary>
 ///     GAME MANAGER
-///     Mengatur sistem poin dan kondisi kemenangan (Victory Condition).
-///     Pemain akan MENANG setelah mengumpulkan sejumlah Kunci Emas DAN Kunci KW yang ditentukan!
+///     Manages the score system and victory condition.
+///     Player wins after collecting the required number of Gold Keys AND Fake/Silver Keys!
 /// </summary>
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("=== 1. SYARAT KEMENANGAN (KUNCI EMAS & KUNCI KW) ===")]
-    [Tooltip("Target jumlah Kunci Emas yang harus dikumpulkan")]
-    public int targetKunciEmas = 3;
+    [Header("=== 1. VICTORY CONDITIONS (GOLD & FAKE KEYS) ===")]
+    [Tooltip("Target number of Gold Keys required to win")]
+    [FormerlySerializedAs("targetKunciEmas")]
+    public int targetGoldKeys = 3;
 
-    [Tooltip("Jumlah Kunci Emas yang sudah dikumpulkan")]
-    public int kunciEmasTerkumpul = 0;
+    [Tooltip("Number of Gold Keys collected so far")]
+    [FormerlySerializedAs("kunciEmasTerkumpul")]
+    public int goldKeysCollected = 0;
 
-    [Tooltip("Target jumlah Kunci KW yang harus dikumpulkan")]
-    public int targetKunciKw = 2;
+    [Tooltip("Target number of Fake/Silver Keys required to win")]
+    [FormerlySerializedAs("targetKunciKw")]
+    public int targetFakeKeys = 2;
 
-    [Tooltip("Jumlah Kunci KW yang sudah dikumpulkan")]
-    public int kunciKwTerkumpul = 0;
+    [Tooltip("Number of Fake/Silver Keys collected so far")]
+    [FormerlySerializedAs("kunciKwTerkumpul")]
+    public int fakeKeysCollected = 0;
 
-    [Header("=== 2. SISTEM POIN ===")]
-    [Tooltip("Total poin pemain saat ini")]
-    public int totalPoin = 0;
+    [Header("=== 2. SCORE SYSTEM ===")]
+    [Tooltip("Current total player score")]
+    [FormerlySerializedAs("totalPoin")]
+    public int totalScore = 0;
 
-    [Tooltip("Poin yang didapatkan setiap mengambil 1 Kunci Emas")]
+    [Tooltip("Points awarded for each Gold Key collected")]
+    [FormerlySerializedAs("poinPerKunciEmas")]
     [FormerlySerializedAs("poinPerKunci")]
-    public int poinPerKunciEmas = 100;
+    public int pointsPerGoldKey = 100;
 
-    [Tooltip("Poin yang didapatkan setiap mengambil 1 Kunci KW")]
-    public int poinPerKunciKw = 50;
+    [Tooltip("Points awarded for each Fake Key collected")]
+    [FormerlySerializedAs("poinPerKunciKw")]
+    public int pointsPerFakeKey = 50;
 
-    [Tooltip("Poin yang didapatkan setiap mengambil 1 Koin")]
-    public int poinPerKoin = 10;
+    [Tooltip("Points awarded for each Coin collected")]
+    [FormerlySerializedAs("poinPerKoin")]
+    public int pointsPerCoin = 10;
 
-    [Tooltip("Poin yang didapatkan saat mengalahkan Musuh")]
-    public int poinPerMusuh = 20;
+    [Tooltip("Points awarded when defeating an Enemy")]
+    [FormerlySerializedAs("poinPerMusuh")]
+    public int pointsPerEnemy = 20;
 
-    [Header("=== 3. UI DISPLAY (OPSIONAL) ===")]
-    [Tooltip("Text UI untuk menampilkan skor & jumlah kunci (TextMeshPro)")]
+    [Header("=== 3. UI DISPLAY ===")]
+    [Tooltip("Text UI component to display score & key counts (TextMeshPro)")]
     public TMP_Text pointText;
 
-    [Tooltip("Panel UI Kemenangan (misal WinPanel yang muncul saat menang)")]
+    [Tooltip("Win panel UI GameObject displayed upon winning")]
     public GameObject winPanel;
 
-    [Tooltip("Text UI Kemenangan")]
+    [Tooltip("Win text UI component")]
     public TMP_Text winText;
 
-    private bool sudahMenang = false;
+    private bool hasWon = false;
 
     private void Awake()
     {
-        // Singleton pattern: memastikan hanya ada 1 GameManager di scene
+        // Singleton pattern: ensure only one GameManager instance exists
         if (Instance == null)
         {
             Instance = this;
@@ -68,7 +77,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // Sembunyikan panel kemenangan di awal game
+        // Hide win panel at start
         if (winPanel != null)
         {
             winPanel.SetActive(false);
@@ -78,94 +87,92 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    ///     Dipanggil ketika pemain mengambil Kunci Emas
+    ///     Called when the player collects a Gold Key
     /// </summary>
-    public void KumpulkanKunciEmas()
+    public void CollectGoldKey()
     {
-        if (sudahMenang) return;
+        if (hasWon) return;
 
-        kunciEmasTerkumpul++;
-        totalPoin += poinPerKunciEmas;
+        goldKeysCollected++;
+        totalScore += pointsPerGoldKey;
 
-        Debug.Log($"<color=yellow><b>[KUNCI EMAS]</b> Berhasil diambil! ({kunciEmasTerkumpul}/{targetKunciEmas}) | Total Poin: {totalPoin}</color>");
+        Debug.Log($"<color=yellow><b>[GOLD KEY]</b> Collected! ({goldKeysCollected}/{targetGoldKeys}) | Total Score: {totalScore}</color>");
 
         UpdateUI();
-        PeriksaKondisiKemenangan();
+        CheckWinCondition();
     }
 
     /// <summary>
-    ///     Dipanggil ketika pemain mengambil Kunci KW
+    ///     Called when the player collects a Fake Key
     /// </summary>
-    public void KumpulkanKunciKw()
+    public void CollectFakeKey()
     {
-        if (sudahMenang) return;
+        if (hasWon) return;
 
-        kunciKwTerkumpul++;
-        totalPoin += poinPerKunciKw;
+        fakeKeysCollected++;
+        totalScore += pointsPerFakeKey;
 
-        Debug.Log($"<color=cyan><b>[KUNCI KW]</b> Berhasil diambil! ({kunciKwTerkumpul}/{targetKunciKw}) | Total Poin: {totalPoin}</color>");
+        Debug.Log($"<color=cyan><b>[FAKE KEY]</b> Collected! ({fakeKeysCollected}/{targetFakeKeys}) | Total Score: {totalScore}</color>");
 
         UpdateUI();
-        PeriksaKondisiKemenangan();
+        CheckWinCondition();
     }
 
     /// <summary>
-    ///     Mengecek apakah syarat kemenangan sudah terpenuhi:
-    ///     Kunci Emas DAN Kunci KW keduanya harus sudah mencapai target!
+    ///     Checks if victory condition has been met (both Gold and Fake keys collected)
     /// </summary>
-    private void PeriksaKondisiKemenangan()
+    public void CheckWinCondition()
     {
-        if (kunciEmasTerkumpul >= targetKunciEmas && kunciKwTerkumpul >= targetKunciKw)
+        if (goldKeysCollected >= targetGoldKeys && fakeKeysCollected >= targetFakeKeys)
         {
-            Menang();
+            Win();
         }
     }
 
     /// <summary>
-    ///     Menambah poin saat mengambil koin
+    ///     Adds points when picking up a coin
     /// </summary>
-    public void AmbilKoin()
+    public void CollectCoin()
     {
-        totalPoin += poinPerKoin;
-        Debug.Log($"<color=yellow>[KOIN]</color> +{poinPerKoin} Poin! Total: {totalPoin}");
+        totalScore += pointsPerCoin;
+        Debug.Log($"<color=yellow>[COIN]</color> +{pointsPerCoin} Points! Total: {totalScore}");
         UpdateUI();
     }
 
     /// <summary>
-    ///     Menambah poin dalam jumlah tertentu
+    ///     Adds a specific amount of score points
     /// </summary>
-    public void TambahPoin(int jumlahPoin)
+    public void AddPoints(int amount)
     {
-        totalPoin += jumlahPoin;
+        totalScore += amount;
         UpdateUI();
     }
 
     /// <summary>
-    ///     Memperbarui teks antarmuka (UI) skor dan kunci
+    ///     Updates UI score and key counter texts
     /// </summary>
-    private void UpdateUI()
+    public void UpdateUI()
     {
         if (pointText != null)
         {
-            pointText.text = $"Poin: {totalPoin} | Emas: {kunciEmasTerkumpul}/{targetKunciEmas} | KW: {kunciKwTerkumpul}/{targetKunciKw}";
+            pointText.text = $"Score: {totalScore} | Gold: {goldKeysCollected}/{targetGoldKeys} | Fake: {fakeKeysCollected}/{targetFakeKeys}";
         }
     }
 
     /// <summary>
-    ///     Kondisi saat semua kunci telah berhasil dikumpulkan
+    ///     Handles win state when all requirements are met
     /// </summary>
-    private void Menang()
+    public void Win()
     {
-        if (sudahMenang) return;
-        sudahMenang = true;
+        if (hasWon) return;
+        hasWon = true;
 
         Debug.Log("<color=green><b>====================================================</b></color>");
-        Debug.Log("<color=green><b>SELAMAT! KAMU MENANG! SEMUA KUNCI EMAS & KW TERKUMPUL!</b></color>");
-        Debug.Log($"<color=green><b>Kunci Emas: {kunciEmasTerkumpul}/{targetKunciEmas} | Kunci KW: {kunciKwTerkumpul}/{targetKunciKw}</b></color>");
-        Debug.Log($"<color=green><b>TOTAL POIN AKHIR: {totalPoin}</b></color>");
+        Debug.Log("<color=green><b>CONGRATULATIONS! YOU WIN! ALL KEYS COLLECTED!</b></color>");
+        Debug.Log($"<color=green><b>Gold Keys: {goldKeysCollected}/{targetGoldKeys} | Fake Keys: {fakeKeysCollected}/{targetFakeKeys}</b></color>");
+        Debug.Log($"<color=green><b>FINAL SCORE: {totalScore}</b></color>");
         Debug.Log("<color=green><b>====================================================</b></color>");
 
-        // Tampilkan panel kemenangan jika ada
         if (winPanel != null)
         {
             winPanel.SetActive(true);
@@ -173,26 +180,26 @@ public class GameManager : MonoBehaviour
 
         if (winText != null)
         {
-            winText.text = $"VICTORY!\nSemua Kunci Emas ({kunciEmasTerkumpul}/{targetKunciEmas}) & Kunci KW ({kunciKwTerkumpul}/{targetKunciKw}) Ditemukan!\nTotal Poin: {totalPoin}";
+            winText.text = $"VICTORY!\nAll Gold Keys ({goldKeysCollected}/{targetGoldKeys}) & Fake Keys ({fakeKeysCollected}/{targetFakeKeys}) Found!\nTotal Score: {totalScore}";
             winText.gameObject.SetActive(true);
         }
 
-        // Hentikan permainan saat menang
+        // Pause game upon victory
         Time.timeScale = 0f;
     }
 
     private void OnEnable()
     {
-        Enemy.OnZombieMati += TambahPoinSaatMusuhMati;
+        Enemy.OnZombieDeath += OnEnemyDied;
     }
 
     private void OnDisable()
     {
-        Enemy.OnZombieMati -= TambahPoinSaatMusuhMati;
+        Enemy.OnZombieDeath -= OnEnemyDied;
     }
 
-    private void TambahPoinSaatMusuhMati(Enemy zombie)
+    private void OnEnemyDied(Enemy zombie)
     {
-        TambahPoin(poinPerMusuh);
+        AddPoints(pointsPerEnemy);
     }
 }

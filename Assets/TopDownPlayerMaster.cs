@@ -20,7 +20,7 @@ using UnityEngine.UI;
 namespace TopDownCharacter2D
 {
     /// <summary>
-    ///     Master script untuk Player yang menggabungkan seluruh sistem:
+    ///     Master script for Player combining all modular systems:
     ///     Input, Stats, Movement, Aim Rotation, Shooting, Health System, Knockback, Animations, FX, dan Light Direction.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
@@ -47,13 +47,13 @@ namespace TopDownCharacter2D
         #region 2. Aim & Rotation Settings (TopDownAimRotation)
 
         [Header("=== 2. AIM & ROTATION ===")]
-        [SerializeField] [Tooltip("Renderer lengan yang digunakan untuk membidik")]
+        [SerializeField] [Tooltip("Arm renderer used for aiming")]
         private SpriteRenderer armRenderer;
 
-        [SerializeField] [Tooltip("Renderer utama karakter yang akan di-flip")]
+        [SerializeField] [Tooltip("Main character renderers to be flipped horizontally")]
         private List<SpriteRenderer> characterRenderers = new List<SpriteRenderer>();
 
-        [SerializeField] [Tooltip("Titik poros (pivot) lengan untuk berputar")]
+        [SerializeField] [Tooltip("Pivot transform of the arm for rotation")]
         private Transform armPivot;
 
         #endregion
@@ -61,19 +61,19 @@ namespace TopDownCharacter2D
         #region 3. Shooting Settings (TopDownShooting)
 
         [Header("=== 3. SHOOTING SETTINGS ===")]
-        [SerializeField] [Tooltip("Damage dari setiap peluru yang ditembakkan ke musuh")]
+        [SerializeField] [Tooltip("Damage dealt by each bullet fired at enemies")]
         private float bulletDamage = 25f;
 
-        [SerializeField] [Tooltip("Prefab peluru (digunakan jika ProjectileManager tidak ada di scene)")]
+        [SerializeField] [Tooltip("Bullet prefab fallback if ProjectileManager is not in scene")]
         private GameObject bulletPrefab;
 
-        [SerializeField] [Range(0.0f, 2f)] [Tooltip("Kekuatan hentakan (recoil) setelah menembak")]
+        [SerializeField] [Range(0.0f, 2f)] [Tooltip("Recoil pushback strength after firing")]
         private float recoilStrength = 0.5f;
 
-        [SerializeField] [Tooltip("Apakah recoil proporsional dengan ukuran proyektil")]
+        [SerializeField] [Tooltip("Whether recoil strength scales with projectile size")]
         private bool projectileSizeModifyRecoil = true;
 
-        [SerializeField] [Tooltip("Titik awal munculnya proyektil")]
+        [SerializeField] [Tooltip("Spawn point transform for projectiles")]
         private Transform projectileSpawnPosition;
 
         private Vector2 _aimDirection = Vector2.right;
@@ -84,13 +84,13 @@ namespace TopDownCharacter2D
         #region 4. Light / Flashlight Settings (LightDirectionHandler)
 
         [Header("=== 4. FLASHLIGHT / LIGHT 2D ===")]
-        [Tooltip("Transform dari 2D Light (child dari player)")]
+        [Tooltip("Transform of 2D Light (child of player)")]
         [SerializeField] private Transform targetLightTransform;
 
-        [Tooltip("Kecepatan kehalusan rotasi senter")]
+        [Tooltip("Flashlight rotation smoothness speed")]
         [SerializeField] private float lightRotationSpeed = 15f;
 
-        [Tooltip("Sudut offset rotasi dalam derajat (misal -90 jika sprite lampu menghadap ke atas)")]
+        [Tooltip("Rotation offset angle in degrees (e.g. -90 if light sprite faces upward)")]
         [SerializeField] private float lightRotationOffset = -90f;
 
         #endregion
@@ -98,29 +98,29 @@ namespace TopDownCharacter2D
         #region 5. Health & UI Settings (HealthSystem)
 
         [Header("=== 5. HEALTH SYSTEM & UI ===")]
-        [Tooltip("Centang jika komponen ini ada pada PLAYER. Hapus centang jika pada ENEMY.")]
+        [Tooltip("Check if this component is on the PLAYER. Uncheck if on an ENEMY.")]
         [SerializeField] private bool isPlayer = true;
 
-        [Tooltip("Maksimum poin darah (diatur minimal 100 untuk player)")]
+        [Tooltip("Maximum health points (set to at least 100 for player)")]
         [SerializeField] private float maxHealth = 100f;
 
-        [Tooltip("Poin darah saat ini")]
+        [Tooltip("Current health points")]
         [SerializeField] private float currentHealth = 100f;
 
-        [Tooltip("Durasi kebal (invincibility) dalam detik setelah terkena hit")]
-        [SerializeField] private float waktuKebal = 0.8f;
+        [Tooltip("Invincibility duration in seconds after taking damage")]
+        [SerializeField] private float invincibilityDuration = 0.8f;
 
-        [Tooltip("Canvas yang menampung Slider darah")]
+        [Tooltip("Canvas hosting the health bar Slider")]
         [SerializeField] private Canvas healthBarCanvas;
 
-        [Tooltip("Komponen UI Slider untuk darah")]
+        [Tooltip("UI Slider component for health bar")]
         [SerializeField] private Slider healthSlider;
 
-        [Tooltip("Komponen Image di dalam Slider Fill Area untuk transisi warna")]
+        [Tooltip("Image component inside Slider Fill Area for color gradients")]
         [SerializeField] private Image healthBarFill;
 
-        [Tooltip("Offset posisi bar darah di atas karakter (jika World Space)")]
-        [SerializeField] private Vector3 posisiBarDarah = new Vector3(0f, 1.2f, 0f);
+        [Tooltip("Health bar position offset above character (if World Space)")]
+        [SerializeField] private Vector3 healthBarOffset = new Vector3(0f, 1.2f, 0f);
 
         [Header("Health Events")]
         [SerializeField] private UnityEvent onDamage = new UnityEvent();
@@ -188,17 +188,17 @@ namespace TopDownCharacter2D
 
         protected override void Awake()
         {
-            // 1. Inisialisasi Stats terlebih dahulu karena base.Awake() pada TopDownCharacterController
-            //    mungkin membutuhkan komponen / data stats.
+            // 1. Initialize Stats first as base.Awake() on TopDownCharacterController
+            //    may require stats components/data.
             UpdateCharacterStats(null, null);
             statsModifiers.CollectionChanged += UpdateCharacterStats;
 
             base.Awake();
 
-            // 2. Pastikan waktu game berjalan normal
+            // 2. Ensure game time runs normally
             Time.timeScale = 1f;
 
-            // 3. Cache komponen utama
+            // 3. Cache main components
             _mainCamera = Camera.main;
             _rb = GetComponent<Rigidbody2D>();
             _pickup = GetComponent<PickupItem>();
@@ -226,12 +226,12 @@ namespace TopDownCharacter2D
         {
             _projectileManager = ProjectileManager.instance;
 
-            // Hubungkan Event Internal (Movement, Aim, Shooting, Animation)
+            // Connect internal events (Movement, Aim, Shooting, Animation)
             OnMoveEvent.AddListener(OnMoveReceived);
             LookEvent.AddListener(OnAimReceived);
             OnAttackEvent.AddListener(OnAttackReceived);
 
-            // Hubungkan Event Health ke Animasi
+            // Connect Health events to animations
             onDamage.AddListener(OnHurtAnimation);
             onInvincibilityEnd.AddListener(InvincibilityEndAnimation);
 
@@ -242,7 +242,7 @@ namespace TopDownCharacter2D
                 healthSlider.minValue = 0f;
                 healthSlider.maxValue = 1f;
             }
-            UpdateTampilanHealthBar();
+            UpdateHealthBarUI();
 
             // Setup FX Listeners
             InitializeFxListeners();
@@ -255,11 +255,11 @@ namespace TopDownCharacter2D
             // 0. Update input dan eksekusi menembak
             HandlePlayerShooting();
 
-            // 1. Update arah senter (LightDirectionHandler)
+            // 1. Update flashlight direction (LightDirectionHandler)
             UpdateLightDirection();
 
-            // 2. Update timer kebal (HealthSystem)
-            if (_isInvincible && Time.time >= _timeSinceLastDamage + waktuKebal)
+            // 2. Update invincibility timer (HealthSystem)
+            if (_isInvincible && Time.time >= _timeSinceLastDamage + invincibilityDuration)
             {
                 _isInvincible = false;
                 onInvincibilityEnd.Invoke();
@@ -273,13 +273,13 @@ namespace TopDownCharacter2D
         }
 
         /// <summary>
-        ///     Mengatur jeda waktu dan eksekusi tembakan secara mandiri tanpa tergantung skrip luar
+        ///     Handles shooting rate and execution independently without external dependencies
         /// </summary>
         private void HandlePlayerShooting()
         {
             if (_isDead) return;
 
-            // Dukungan klik mouse langsung (agar tidak terhambat jika New Input System belum aktif)
+            // Direct mouse click support (ensures firing if New Input System is not yet active)
             if (Mouse.current != null)
             {
                 if (Mouse.current.leftButton.wasReleasedThisFrame) IsAttacking = false;
@@ -313,18 +313,18 @@ namespace TopDownCharacter2D
 
         private void FixedUpdate()
         {
-            // Terapkan pergerakan fisika (TopDownMovement)
+            // Apply physics movement (TopDownMovement)
             ApplyMovement(_movementDirection);
         }
 
         private void LateUpdate()
         {
-            // Jaga posisi & rotasi bar darah tetap di atas player jika menggunakan World Space Canvas
+            // Keep health bar position & rotation above player if using World Space Canvas
             if (isPlayer && healthBarCanvas != null)
             {
                 if (healthBarCanvas.renderMode == RenderMode.WorldSpace)
                 {
-                    healthBarCanvas.transform.position = transform.position + posisiBarDarah;
+                    healthBarCanvas.transform.position = transform.position + healthBarOffset;
                     healthBarCanvas.transform.rotation = Quaternion.identity;
                 }
             }
@@ -335,7 +335,7 @@ namespace TopDownCharacter2D
         #region Input System Methods (TopDownInputController)
 
         /// <summary>
-        ///     Dipanggil oleh Unity Input System ketika ada input pergerakan
+        ///     Called by Unity Input System on move input
         /// </summary>
         public void OnMove(InputValue value)
         {
@@ -345,7 +345,7 @@ namespace TopDownCharacter2D
         }
 
         /// <summary>
-        ///     Dipanggil oleh Unity Input System ketika ada input arah pandang / mouse
+        ///     Called by Unity Input System on look/aim input
         /// </summary>
         public void OnLook(InputValue value)
         {
@@ -368,7 +368,7 @@ namespace TopDownCharacter2D
         }
 
         /// <summary>
-        ///     Dipanggil oleh Unity Input System ketika tombol tembak ditekan/dilepas
+        ///     Called by Unity Input System when fire button is pressed or released
         /// </summary>
         public void OnFire(InputValue value)
         {
@@ -496,7 +496,7 @@ namespace TopDownCharacter2D
             }
             else if (bulletPrefab != null && projectileSpawnPosition != null)
             {
-                // Fallback instansiasi langsung jika ProjectileManager tidak ada
+                // Fallback direct instantiation if ProjectileManager is absent
                 GameObject bulletObj = Instantiate(bulletPrefab, projectileSpawnPosition.position, Quaternion.identity);
                 TopDownCharacter2D.Attacks.Range.RangedAttackController rangedAttack = bulletObj.GetComponent<TopDownCharacter2D.Attacks.Range.RangedAttackController>();
                 if (rangedAttack != null)
@@ -751,49 +751,50 @@ namespace TopDownCharacter2D
             }
         }
 
-        public void KenaDamage(int damage)
+        public void TakeDamage(int damage)
         {
-            KurangiDarah(damage);
+            TakeDamage((float)damage);
         }
+
 
         public bool ChangeHealth(float change)
         {
             if (change < 0)
             {
-                return KurangiDarah(Mathf.Abs(change));
+                return TakeDamage(Mathf.Abs(change));
             }
             else if (change > 0)
             {
-                return TambahDarah(change);
+                return Heal(change);
             }
             return false;
         }
 
-        public bool KurangiDarah(float jumlahDamage)
+        public bool TakeDamage(float damageAmount)
         {
             if (_isDead) return false;
 
-            // Jika ada skrip lama yang mengirim damage 1, naikkan ke 15 agar terasa
-            if (jumlahDamage <= 1.1f)
+            // If legacy scripts send 1 damage, boost to 15 for impactful feel
+            if (damageAmount <= 1.1f)
             {
-                jumlahDamage = 15f;
+                damageAmount = 15f;
             }
 
-            if (Time.time < _timeSinceLastDamage + waktuKebal)
+            if (Time.time < _timeSinceLastDamage + invincibilityDuration)
             {
                 return false;
             }
 
             _timeSinceLastDamage = Time.time;
             _isInvincible = true;
-            currentHealth -= jumlahDamage;
+            currentHealth -= damageAmount;
 
             if (currentHealth < 0)
             {
                 currentHealth = 0;
             }
 
-            Debug.Log($"<color=orange>[HIT]</color> {gameObject.name} took {jumlahDamage} damage! Remaining HP: {currentHealth}/{maxHealth}");
+            Debug.Log($"<color=orange>[HIT]</color> {gameObject.name} took {damageAmount} damage! Remaining HP: {currentHealth}/{maxHealth}");
 
             if (gameObject.activeInHierarchy)
             {
@@ -801,11 +802,11 @@ namespace TopDownCharacter2D
             }
 
             onDamage.Invoke();
-            UpdateTampilanHealthBar();
+            UpdateHealthBarUI();
 
             if (currentHealth <= 0)
             {
-                ProsesKematian();
+                ProcessDeath();
             }
 
             return true;
@@ -824,22 +825,22 @@ namespace TopDownCharacter2D
             }
         }
 
-        public bool TambahDarah(float jumlahHeal)
+        public bool Heal(float healAmount)
         {
             if (_isDead) return false;
 
-            currentHealth += jumlahHeal;
+            currentHealth += healAmount;
             if (currentHealth > maxHealth)
             {
                 currentHealth = maxHealth;
             }
 
-            UpdateTampilanHealthBar();
+            UpdateHealthBarUI();
             onHeal.Invoke();
             return true;
         }
 
-        private void ProsesKematian()
+        private void ProcessDeath()
         {
             if (_isDead) return;
             _isDead = true;
@@ -860,7 +861,7 @@ namespace TopDownCharacter2D
                     healthBarCanvas.gameObject.SetActive(false);
                 }
 
-                MatikanKontrolPlayer();
+                DisablePlayerControls();
                 Time.timeScale = 0f;
             }
             else
@@ -874,7 +875,7 @@ namespace TopDownCharacter2D
             }
         }
 
-        private void MatikanKontrolPlayer()
+        private void DisablePlayerControls()
         {
             if (_rb != null)
             {
@@ -893,22 +894,22 @@ namespace TopDownCharacter2D
             enabled = false;
         }
 
-        public void UpdateTampilanHealthBar()
+        public void UpdateHealthBarUI()
         {
             if (!isPlayer || healthSlider == null) return;
 
-            float persentase = maxHealth > 0 ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
-            healthSlider.value = persentase;
+            float percentage = maxHealth > 0 ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
+            healthSlider.value = percentage;
 
             if (healthBarFill != null)
             {
-                if (persentase > 0.5f)
+                if (percentage > 0.5f)
                 {
-                    healthBarFill.color = Color.Lerp(Color.yellow, new Color(0.2f, 0.9f, 0.3f, 1f), (persentase - 0.5f) * 2f);
+                    healthBarFill.color = Color.Lerp(Color.yellow, new Color(0.2f, 0.9f, 0.3f, 1f), (percentage - 0.5f) * 2f);
                 }
                 else
                 {
-                    healthBarFill.color = Color.Lerp(new Color(0.9f, 0.15f, 0.15f, 1f), Color.yellow, persentase * 2f);
+                    healthBarFill.color = Color.Lerp(new Color(0.9f, 0.15f, 0.15f, 1f), Color.yellow, percentage * 2f);
                 }
             }
         }
@@ -954,7 +955,7 @@ namespace TopDownCharacter2D
             if (animator != null)
             {
                 animator.SetBool(IsHurtHash, true);
-                animator.Play("hurt", 2, 0f); // Paksa layer Hurt (Layer 2) untuk langsung memutar animasi hurt seketika
+                animator.Play("hurt", 2, 0f); // Force Hurt layer (Layer 2) to play hurt animation immediately
             }
         }
 
@@ -967,7 +968,7 @@ namespace TopDownCharacter2D
         }
 
         /// <summary>
-        ///     Dipanggil melalui Animation Event ketika karakter berjalan
+        ///     Called via Animation Event when character walks
         /// </summary>
         public void CreateDustParticles()
         {
@@ -1051,14 +1052,14 @@ namespace TopDownCharacter2D
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            // Ambil Koin
+            // Collect Coin
             if (other.CompareTag("Coin"))
             {
                 Destroy(other.gameObject);
-                Debug.Log("<color=yellow>[COIN]</color> Koin berhasil diambil!");
+                Debug.Log("<color=yellow>[COIN]</color> Coin successfully collected!");
                 if (GameManager.Instance != null)
                 {
-                    GameManager.Instance.AmbilKoin();
+                    GameManager.Instance.CollectCoin();
                 }
             }
         }
