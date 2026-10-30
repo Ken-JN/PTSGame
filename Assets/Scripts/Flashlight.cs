@@ -3,10 +3,8 @@ using UnityEngine.Serialization;
 
 public class Flashlight : MonoBehaviour
 {
-    [Tooltip("Transform of the 2D Light component")]
     public Transform playerLight;
 
-    [Tooltip("Flashlight rotation smoothness speed")]
     [FormerlySerializedAs("kecepatanRotasiLight")]
     public float lightRotationSpeed = 15f;
 

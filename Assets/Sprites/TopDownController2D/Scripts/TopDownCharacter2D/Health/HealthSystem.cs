@@ -8,39 +8,26 @@ using TopDownCharacter2D.Stats;
 
 namespace TopDownCharacter2D.Health
 {
-    /// <summary>
-    ///     Complete Health System for Player and Enemies.
-    ///     Integrated with TopDownController2D, TopDownFx, SampleCharacterAnimation, and UI Slider.
-    ///     Taking damage DOES NOT freeze the game! Freezing/Game Over ONLY happens when HP reaches 0!
-    /// </summary>
     public class HealthSystem : MonoBehaviour, IDamageable
     {
-        [Header("1. Character Type")]
-        [Tooltip("Check if this component is on PLAYER. Uncheck if on ENEMY.")]
         [SerializeField] private bool isPlayer = true;
 
-        [Header("2. Health Settings")]
         [Tooltip("Maximum health points (set to 100 so player takes multiple hits before dying)")]
         [SerializeField] private float maxHealth = 100f;
 
         [Tooltip("Current health points (starts full at game launch)")]
         [SerializeField] private float currentHealth = 100f;
 
-        [Tooltip("Invincibility duration in seconds after being hit to prevent multi-hits in 1 frame")]
         [FormerlySerializedAs("waktuKebal")]
         [SerializeField] private float invincibilityDuration = 0.8f;
 
-        [Header("3. Health Bar UI")]
         [Tooltip("Canvas holding the Slider (World Space above player or Screen Space on screen)")]
         [SerializeField] private Canvas healthBarCanvas;
 
-        [Tooltip("UI Slider component for health")]
         [SerializeField] private Slider healthSlider;
 
-        [Tooltip("Image component inside Slider Fill Area for color transition")]
         [SerializeField] private Image healthBarFill;
 
-        [Tooltip("Position offset of health bar above character")]
         [FormerlySerializedAs("posisiBarDarah")]
         [SerializeField] private Vector3 healthBarOffset = new Vector3(0f, 1.2f, 0f);
 
@@ -171,9 +158,6 @@ namespace TopDownCharacter2D.Health
             }
         }
 
-        /// <summary>
-        ///     IDamageable interface implementation
-        /// </summary>
         public void TakeDamage(int damage)
         {
             TopDownEnemy enemy = GetComponent<TopDownEnemy>();
@@ -185,9 +169,6 @@ namespace TopDownCharacter2D.Health
             TakeDamage((float)damage);
         }
 
-        /// <summary>
-        ///     TopDownController2D compatibility
-        /// </summary>
         public bool ChangeHealth(float change)
         {
             TopDownEnemy enemy = GetComponent<TopDownEnemy>();
@@ -206,9 +187,6 @@ namespace TopDownCharacter2D.Health
             return false;
         }
 
-        /// <summary>
-        ///     Applies damage to the character
-        /// </summary>
         public bool TakeDamage(float damageAmount)
         {
             if (_isDead) return false;
@@ -228,7 +206,7 @@ namespace TopDownCharacter2D.Health
                 currentHealth = 0;
             }
 
-            Debug.Log($"<color=orange>[HIT]</color> {gameObject.name} took {damageAmount} damage! Remaining HP: {currentHealth}/{maxHealth}");
+
 
             // 1. Visual flash effect
             if (gameObject.activeInHierarchy)
@@ -289,7 +267,7 @@ namespace TopDownCharacter2D.Health
 
             if (isPlayer && CompareTag("Player"))
             {
-                Debug.Log("<color=red><b>[GAME OVER] PLAYER HAS DIED! GAME FREEZES!</b></color>");
+   
 
                 // Safely detach Main Camera so view is not lost
                 if (Camera.main != null && Camera.main.transform.IsChildOf(transform))
@@ -311,7 +289,6 @@ namespace TopDownCharacter2D.Health
             }
             else
             {
-                Debug.Log($"<color=green>[VICTORY] Enemy '{gameObject.name}' defeated!</color>");
 
                 Collider2D col = GetComponent<Collider2D>();
                 if (col != null) col.enabled = false;

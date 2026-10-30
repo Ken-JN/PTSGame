@@ -1,25 +1,27 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace TopDownCharacter2D.FX
 {
     /// <summary>
-    ///     Manages the game's sounds
+    ///     Manages the game's sounds (sound effects and background music)
     /// </summary>
-    [RequireComponent(typeof(AudioSource))]
     [RequireComponent(typeof(AudioSource))]
     public class SoundManager : MonoBehaviour
     {
         public static SoundManager instance;
 
-        [SerializeField] [Range(0f, 1f)] private float soundEffectVolume;
-        [SerializeField] [Range(0f, 1f)] private float soundEffectPitchVariance;
-        [SerializeField] [Range(0f, 1f)] private float musicVolume;
+        [SerializeField] [Range(0f, 1f)] private float soundEffectVolume = 0.8f;
+        [SerializeField] [Range(0f, 1f)] private float soundEffectPitchVariance = 0.1f;
+        [SerializeField] [Range(0f, 1f)] private float musicVolume = 0.5f;
 
         private AudioSource musicAudioSource;
 
         private void Awake()
         {
-            instance = this;
+            if (instance == null)
+            {
+                instance = this;
+            }
             musicAudioSource = GetComponent<AudioSource>();
         }
 
@@ -34,7 +36,7 @@ namespace TopDownCharacter2D.FX
         }
 
         /// <summary>
-        ///     Play a sound effect globally
+        ///     Play a sound effect globally (2D)
         /// </summary>
         /// <param name="audio"> The sound effect to play</param>
         public static void PlaySoundEffect(AudioClip audio)
@@ -48,28 +50,61 @@ namespace TopDownCharacter2D.FX
         /// <param name="music"> The new music to play</param>
         public static void ChangeBackGroundMusic(AudioClip music)
         {
-            instance.musicAudioSource.Stop();
-            instance.musicAudioSource.clip = music;
-            instance.musicAudioSource.Play();
+            if (instance == null || music == null) return;
+            if (instance.musicAudioSource == null) instance.musicAudioSource = instance.GetComponent<AudioSource>();
+            if (instance.musicAudioSource != null)
+            {
+                instance.musicAudioSource.Stop();
+                instance.musicAudioSource.clip = music;
+                instance.musicAudioSource.volume = instance.musicVolume;
+                instance.musicAudioSource.Play();
+            }
         }
 
         /// <summary>
-        ///     Creates and play a temporary AudioSource to play a single sound
+        ///     Creates and plays a temporary AudioSource to play a single sound
         /// </summary>
         /// <param name="clip"> The clip to play</param>
         /// <param name="pos"> The position where to play the clip</param>
         /// <param name="spatialize"> Whether to spatialize the sound or not</param>
         private static void PlayClipAt(AudioClip clip, Vector3 pos, bool spatialize)
         {
-            GameObject gameObject = new GameObject("TempAudio");
-            gameObject.transform.position = pos;
-            AudioSource source = gameObject.AddComponent<AudioSource>(); // add an audio source
-            source.clip = clip; // define the clip
-            source.volume = instance.soundEffectVolume;
-            source.Play(); // start the sound
-            source.pitch = 1f + Random.Range(-instance.soundEffectPitchVariance, instance.soundEffectPitchVariance);
-            source.spatialize = spatialize;
-            Destroy(gameObject, clip.length * 2f); // destroy object after clip duration
+            if (clip == null) return;
+
+            // Safe singleton retrieval
+            if (instance == null)
+            {
+                instance = FindFirstObjectByType<SoundManager>();
+                if (instance == null)
+                {
+                    GameObject managerObj = new GameObject("SoundManager");
+                    instance = managerObj.AddComponent<SoundManager>();
+                }
+            }
+
+            float volume = 0.8f;
+            float pitchVariance = 0.05f;
+
+            if (instance != null)
+            {
+                // Ensure volume is clearly audible (at least 0.6f if set lower)
+                volume = instance.soundEffectVolume > 0.01f ? Mathf.Max(instance.soundEffectVolume, 0.6f) : 0.8f;
+                pitchVariance = instance.soundEffectPitchVariance;
+            }
+
+            GameObject audioObj = new GameObject($"TempAudio_{clip.name}");
+            audioObj.transform.position = pos;
+
+            AudioSource source = audioObj.AddComponent<AudioSource>();
+            source.clip = clip;
+            source.volume = volume;
+            source.pitch = 1f + Random.Range(-pitchVariance, pitchVariance);
+            source.spatialBlend = spatialize ? 1f : 0f; // 0 = 2D (clear stereo everywhere), 1 = 3D
+            source.playOnAwake = false;
+            source.Play();
+
+            float destroyDelay = Mathf.Max(clip.length * 2f, 1f);
+            Destroy(audioObj, destroyDelay);
         }
     }
 }

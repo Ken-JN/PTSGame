@@ -19,18 +19,12 @@ using UnityEngine.UI;
 
 namespace TopDownCharacter2D
 {
-    /// <summary>
-    ///     Master script for Player combining all modular systems:
-    ///     Input, Stats, Movement, Aim Rotation, Shooting, Health System, Knockback, Animations, FX, dan Light Direction.
-    /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     public class TopDownPlayerMaster : TopDownCharacterController, IDamageable
     {
         #region 1. Stats Settings (CharacterStatsHandler)
 
-        [Header("=== 1. STATS SETTINGS ===")]
-        [SerializeField] [Tooltip("Statistik dasar karakter ini")]
-        private CharacterStats baseStats;
+        [SerializeField] private CharacterStats baseStats;
 
         public readonly ObservableCollection<CharacterStats> statsModifiers = new ObservableCollection<CharacterStats>();
         public CharacterStats CurrentStats { get; private set; }
@@ -46,35 +40,27 @@ namespace TopDownCharacter2D
 
         #region 2. Aim & Rotation Settings (TopDownAimRotation)
 
-        [Header("=== 2. AIM & ROTATION ===")]
-        [SerializeField] [Tooltip("Arm renderer used for aiming")]
-        private SpriteRenderer armRenderer;
+        [SerializeField] private SpriteRenderer armRenderer;
 
-        [SerializeField] [Tooltip("Main character renderers to be flipped horizontally")]
-        private List<SpriteRenderer> characterRenderers = new List<SpriteRenderer>();
+        [SerializeField] private List<SpriteRenderer> characterRenderers = new List<SpriteRenderer>();
 
-        [SerializeField] [Tooltip("Pivot transform of the arm for rotation")]
-        private Transform armPivot;
+        [SerializeField] private Transform armPivot;
 
         #endregion
 
         #region 3. Shooting Settings (TopDownShooting)
 
-        [Header("=== 3. SHOOTING SETTINGS ===")]
-        [SerializeField] [Tooltip("Damage dealt by each bullet fired at enemies")]
-        private float bulletDamage = 25f;
+        [SerializeField] private float bulletDamage = 25f;
 
-        [SerializeField] [Tooltip("Bullet prefab fallback if ProjectileManager is not in scene")]
-        private GameObject bulletPrefab;
+        [SerializeField] private GameObject bulletPrefab;
 
-        [SerializeField] [Range(0.0f, 2f)] [Tooltip("Recoil pushback strength after firing")]
-        private float recoilStrength = 0.5f;
+        [SerializeField] [Range(0.0f, 2f)] private float recoilStrength = 0.5f;
 
-        [SerializeField] [Tooltip("Whether recoil strength scales with projectile size")]
-        private bool projectileSizeModifyRecoil = true;
+        [SerializeField] private bool projectileSizeModifyRecoil = true;
 
-        [SerializeField] [Tooltip("Spawn point transform for projectiles")]
-        private Transform projectileSpawnPosition;
+        [SerializeField] private Transform projectileSpawnPosition;
+
+        [SerializeField] private AudioClip shootSound;
 
         private Vector2 _aimDirection = Vector2.right;
         private ProjectileManager _projectileManager;
@@ -83,11 +69,9 @@ namespace TopDownCharacter2D
 
         #region 4. Light / Flashlight Settings (LightDirectionHandler)
 
-        [Header("=== 4. FLASHLIGHT / LIGHT 2D ===")]
         [Tooltip("Transform of 2D Light (child of player)")]
         [SerializeField] private Transform targetLightTransform;
 
-        [Tooltip("Flashlight rotation smoothness speed")]
         [SerializeField] private float lightRotationSpeed = 15f;
 
         [Tooltip("Rotation offset angle in degrees (e.g. -90 if light sprite faces upward)")]
@@ -97,32 +81,26 @@ namespace TopDownCharacter2D
 
         #region 5. Health & UI Settings (HealthSystem)
 
-        [Header("=== 5. HEALTH SYSTEM & UI ===")]
-        [Tooltip("Check if this component is on the PLAYER. Uncheck if on an ENEMY.")]
         [SerializeField] private bool isPlayer = true;
 
         [Tooltip("Maximum health points (set to at least 100 for player)")]
         [SerializeField] private float maxHealth = 100f;
 
-        [Tooltip("Current health points")]
         [SerializeField] private float currentHealth = 100f;
 
-        [Tooltip("Invincibility duration in seconds after taking damage")]
         [SerializeField] private float invincibilityDuration = 0.8f;
 
-        [Tooltip("Canvas hosting the health bar Slider")]
         [SerializeField] private Canvas healthBarCanvas;
 
-        [Tooltip("UI Slider component for health bar")]
         [SerializeField] private Slider healthSlider;
 
-        [Tooltip("Image component inside Slider Fill Area for color gradients")]
         [SerializeField] private Image healthBarFill;
+
+        public GameObject diePanel;
 
         [Tooltip("Health bar position offset above character (if World Space)")]
         [SerializeField] private Vector3 healthBarOffset = new Vector3(0f, 1.2f, 0f);
 
-        [Header("Health Events")]
         [SerializeField] private UnityEvent onDamage = new UnityEvent();
         [SerializeField] private UnityEvent onHeal = new UnityEvent();
         [SerializeField] private UnityEvent onDeath = new UnityEvent();
@@ -146,7 +124,6 @@ namespace TopDownCharacter2D
 
         #region 6. Knockback Settings (TopDownKnockBack)
 
-        [Header("=== 6. KNOCKBACK SETTINGS ===")]
         [SerializeField] private float knockBackPower = 5f;
         [SerializeField] private float timeBetweenKnockBack = 0.1f;
 
@@ -156,7 +133,6 @@ namespace TopDownCharacter2D
 
         #region 7. Animation & Dust Settings (SampleCharacterAnimation)
 
-        [Header("=== 7. ANIMATION & DUST ===")]
         [SerializeField] private Animator animator;
         [SerializeField] private bool createDustOnWalk = true;
         [SerializeField] private ParticleSystem dustParticleSystem;
@@ -220,6 +196,20 @@ namespace TopDownCharacter2D
 
             // 5. Setup Health System
             InitializeHealthSystem();
+
+            // 6. Cache shoot sound if configured in effects list or load from Resources
+            if (shootSound == null)
+            {
+                if (effects != null)
+                {
+                    var attackFx = effects.FirstOrDefault(e => e.triggerEvent == TriggerEvents.Attack && e.soundEffect != null);
+                    if (attackFx != null) shootSound = attackFx.soundEffect;
+                }
+                if (shootSound == null)
+                {
+                    shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
+                }
+            }
         }
 
         private void Start()
@@ -244,11 +234,16 @@ namespace TopDownCharacter2D
             }
             UpdateHealthBarUI();
 
+            if (diePanel != null)
+            {
+                diePanel.SetActive(false);
+            }
+
             // Setup FX Listeners
             InitializeFxListeners();
         }
 
-        private float _timeSinceLastAttack = float.MaxValue;
+        [System.NonSerialized] private float _playerAttackTimer = float.MaxValue;
 
         protected override void Update()
         {
@@ -272,9 +267,6 @@ namespace TopDownCharacter2D
             }
         }
 
-        /// <summary>
-        ///     Handles shooting rate and execution independently without external dependencies
-        /// </summary>
         private void HandlePlayerShooting()
         {
             if (_isDead) return;
@@ -299,15 +291,15 @@ namespace TopDownCharacter2D
 
             float attackDelay = currentAttackConfig.delay > 0 ? currentAttackConfig.delay : 0.2f;
 
-            if (_timeSinceLastAttack <= attackDelay)
+            if (_playerAttackTimer <= attackDelay)
             {
-                _timeSinceLastAttack += Time.deltaTime;
+                _playerAttackTimer += Time.deltaTime;
             }
 
-            if (IsAttacking && _timeSinceLastAttack > attackDelay)
+            if (IsAttacking && _playerAttackTimer > attackDelay)
             {
-                _timeSinceLastAttack = 0f;
-                OnAttackReceived(currentAttackConfig);
+                _playerAttackTimer = 0f;
+                OnAttackEvent.Invoke(currentAttackConfig);
             }
         }
 
@@ -334,9 +326,6 @@ namespace TopDownCharacter2D
 
         #region Input System Methods (TopDownInputController)
 
-        /// <summary>
-        ///     Called by Unity Input System on move input
-        /// </summary>
         public void OnMove(InputValue value)
         {
             if (_isDead) return;
@@ -344,9 +333,6 @@ namespace TopDownCharacter2D
             OnMoveEvent.Invoke(moveInput);
         }
 
-        /// <summary>
-        ///     Called by Unity Input System on look/aim input
-        /// </summary>
         public void OnLook(InputValue value)
         {
             if (_isDead) return;
@@ -367,9 +353,6 @@ namespace TopDownCharacter2D
             }
         }
 
-        /// <summary>
-        ///     Called by Unity Input System when fire button is pressed or released
-        /// </summary>
         public void OnFire(InputValue value)
         {
             if (_isDead)
@@ -794,7 +777,6 @@ namespace TopDownCharacter2D
                 currentHealth = 0;
             }
 
-            Debug.Log($"<color=orange>[HIT]</color> {gameObject.name} took {damageAmount} damage! Remaining HP: {currentHealth}/{maxHealth}");
 
             if (gameObject.activeInHierarchy)
             {
@@ -849,7 +831,6 @@ namespace TopDownCharacter2D
 
             if (isPlayer && CompareTag("Player"))
             {
-                Debug.Log("<color=red><b>[GAME OVER] PLAYER HAS DIED! GAME FREEZES!</b></color>");
 
                 if (Camera.main != null && Camera.main.transform.IsChildOf(transform))
                 {
@@ -862,11 +843,21 @@ namespace TopDownCharacter2D
                 }
 
                 DisablePlayerControls();
+
+                if (diePanel != null)
+                {
+                    diePanel.SetActive(true);
+                }
+
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.GameOver();
+                }
+
                 Time.timeScale = 0f;
             }
             else
             {
-                Debug.Log($"<color=green>[VICTORY] Enemy '{gameObject.name}' defeated!</color>");
 
                 Collider2D col = GetComponent<Collider2D>();
                 if (col != null) col.enabled = false;
@@ -967,9 +958,6 @@ namespace TopDownCharacter2D
             }
         }
 
-        /// <summary>
-        ///     Called via Animation Event when character walks
-        /// </summary>
         public void CreateDustParticles()
         {
             if (createDustOnWalk && dustParticleSystem != null)
@@ -1004,10 +992,9 @@ namespace TopDownCharacter2D
 
         private void TryAddFxListener(object evt, TriggerEvents evtTrigger)
         {
-            if (effects.All(effect => effect.triggerEvent != evtTrigger))
-            {
-                return;
-            }
+            bool hasMatchingEffect = effects != null && effects.Any(effect => effect.triggerEvent == evtTrigger);
+            if (!hasMatchingEffect && (evtTrigger != TriggerEvents.Attack || shootSound == null)) return;
+
 
             switch (evtTrigger)
             {
@@ -1026,26 +1013,36 @@ namespace TopDownCharacter2D
 
         private void TriggerEffects(TriggerEvents triggerEvent, AttackConfig attackConfig = null)
         {
-            foreach (Effect effect in effects)
+            bool soundPlayed = false;
+
+            if (effects != null)
             {
-                if (effect.triggerEvent != triggerEvent)
+                foreach (Effect effect in effects)
                 {
-                    continue;
-                }
+                    if (effect.triggerEvent != triggerEvent)
+                    {
+                        continue;
+                    }
 
-                if (effect.particleSystem != null)
-                {
-                    effect.particleSystem.Stop();
-                    effect.particleSystem.Play();
-                }
+                    if (effect.particleSystem != null)
+                    {
+                        effect.particleSystem.Stop();
+                        effect.particleSystem.Play();
+                    }
 
-                if (effect.soundEffect != null)
-                {
-                    SoundManager.PlaySoundEffect(effect.soundEffect);
+                    if (effect.soundEffect != null)
+                    {
+                        SoundManager.PlaySoundEffect(effect.soundEffect);
+                        soundPlayed = true;
+                    }
                 }
             }
-        }
 
+            if (!soundPlayed && triggerEvent == TriggerEvents.Attack && shootSound != null)
+            {
+                SoundManager.PlaySoundEffect(shootSound);
+            }
+        }
         #endregion
 
         #region 9. Collectibles & Triggers
@@ -1056,10 +1053,25 @@ namespace TopDownCharacter2D
             if (other.CompareTag("Coin"))
             {
                 Destroy(other.gameObject);
-                Debug.Log("<color=yellow>[COIN]</color> Coin successfully collected!");
                 if (GameManager.Instance != null)
                 {
                     GameManager.Instance.CollectCoin();
+                }
+            }
+            else if (other.CompareTag("GoldKey") && other.GetComponent<Item>() == null)
+            {
+                Destroy(other.gameObject);
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.CollectGoldKey();
+                }
+            }
+            else if (other.CompareTag("SilverKey") && other.GetComponent<Item>() == null)
+            {
+                Destroy(other.gameObject);
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.CollectSilverKey();
                 }
             }
         }

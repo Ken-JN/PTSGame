@@ -1,25 +1,24 @@
 using UnityEngine;
 
-/// <summary>
-///     Attached to collectible item objects in the arena.
-///     When touched by the Player, the item is added to the Inventory and
-///     if it is a Gold Key or Fake Key, progresses the victory condition in GameManager.
-/// </summary>
 public class Item : MonoBehaviour
 {
-    [Header("Item Settings")]
-    [Tooltip("Item ScriptableObject data (e.g. Gold Key or Fake Key)")]
     [SerializeField] private ItemDetails ItemDetails;
+    [SerializeField] private AudioClip pickupSound;
+
     private GrabableItem itemCollector;
 
     private void Awake()
     {
         FindInventoryCollector();
+
+        if (pickupSound == null)
+        {
+            pickupSound = Resources.Load<AudioClip>("Sounds/Pickup");
+        }
     }
 
     private void FindInventoryCollector()
     {
-        // Find InventoryManager component in the scene that implements GrabableItem
         foreach (MonoBehaviour component in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
         {
             if (component is GrabableItem collector)
@@ -32,51 +31,62 @@ public class Item : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player")) return;
+
+        if (ItemDetails != null)
         {
-            if (ItemDetails != null)
+            string itemName = ItemDetails.ItemName.ToLower();
+
+            // 1. Silver Key
+            if (itemName.Contains("silver") || CompareTag("SilverKey"))
             {
-                string itemName = ItemDetails.ItemName.ToLower();
-
-                // 1. Check if Fake / Silver Key
-                if (itemName.Contains("kw") || itemName.Contains("kawe") || itemName.Contains("fake") || CompareTag("FakeKey"))
+                if (GameManager.Instance != null)
                 {
-                    if (GameManager.Instance != null)
-                    {
-                        GameManager.Instance.CollectFakeKey();
-                    }
+                    GameManager.Instance.CollectSilverKey();
                 }
-                // 2. Check if Gold Key
-                else if (itemName.Contains("emas") || itemName.Contains("gold") || CompareTag("GoldKey"))
+                else if (pickupSound != null)
                 {
-                    if (GameManager.Instance != null)
-                    {
-                        GameManager.Instance.CollectGoldKey();
-                    }
+                    TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(pickupSound);
                 }
-                // 3. Other items (general point reward)
-                else
+            }
+            // 2. Gold Key
+            else if (itemName.Contains("gold") || CompareTag("GoldKey"))
+            {
+                if (GameManager.Instance != null)
                 {
-                    if (GameManager.Instance != null)
-                    {
-                        GameManager.Instance.AddPoints(25);
-                    }
+                    GameManager.Instance.CollectGoldKey();
                 }
-
-                // 4. Add to Inventory
-                if (itemCollector == null)
+                else if (pickupSound != null)
                 {
-                    FindInventoryCollector();
+                    TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(pickupSound);
                 }
-
-                if (itemCollector != null)
+            }
+            // 3. Other items
+            else
+            {
+                if (GameManager.Instance != null)
                 {
-                    itemCollector.AddItem(ItemDetails);
+                    GameManager.Instance.AddPoints(25);
+                }
+                if (pickupSound != null)
+                {
+                    TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(pickupSound);
                 }
             }
 
-            // Destroy collectible object in the arena upon pickup
-            Destroy(gameObject);
+            // 4. Add to player inventory
+            if (itemCollector == null)
+            {
+                FindInventoryCollector();
+            }
+
+            if (itemCollector != null)
+            {
+                itemCollector.AddItem(ItemDetails);
+            }
         }
+
+        // Destroy item object in arena after pickup
+        Destroy(gameObject);
     }
 }

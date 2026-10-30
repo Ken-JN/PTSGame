@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca8c6e3fdfa53ff43980aef25ac128f4, type: 3}
   m_Name: ItemDetails 1
   m_EditorClassIdentifier: Assembly-CSharp::ItemDetails
-  itemName: Koentji KW
+  itemName: Silver Key
   quantity: 1
   itemIcon: {fileID: -2636191377049176668, guid: 7ee9500ede53e4640ba1ebbfeab1b589, type: 3}
-  description: yahahha koentji kawe ini
+  description: sebuah kunci silver yang biasa2 aja

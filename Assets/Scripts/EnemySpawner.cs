@@ -1,21 +1,13 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-///     RADIUS-BASED ENEMY SPAWNER
-///     Periodically spawns enemies within a circular radius arena.
-/// </summary>
 public class EnemySpawner : MonoBehaviour
 {
-    [Header("=== 1. PREFAB & TARGET ===")]
-    [Tooltip("Enemy prefab to instantiate")]
     public GameObject enemyPrefab;
 
-    [Tooltip("Center of spawn area: if true, centers around the Player. If false, centers around this Spawner GameObject.")]
     [FormerlySerializedAs("spawnDiSekitarPlayer")]
     public bool spawnAroundPlayer = true;
 
-    [Header("=== 2. RADIUS SETTINGS ===")]
     [Tooltip("Maximum radius for spawning enemies (furthest distance from center)")]
     [FormerlySerializedAs("spawnDistance")]
     public float spawnRadius = 8f;
@@ -23,11 +15,8 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("Minimum radius for spawning enemies (safe distance so enemies do not spawn right on top of player)")]
     public float minSpawnRadius = 3f;
 
-    [Header("=== 3. TIMING & LIMITS ===")]
-    [Tooltip("Spawn interval in seconds between enemy waves")]
     public float spawnInterval = 3f;
 
-    [Tooltip("Maximum number of alive enemies allowed in the arena at once")]
     public int maxEnemies = 15;
 
     // Internal references
@@ -66,9 +55,6 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    /// <summary>
-    ///     Finds the Player GameObject in the scene using tag "Player"
-    /// </summary>
     public void FindPlayer()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -78,9 +64,6 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    /// <summary>
-    ///     Spawns an enemy at a random position within the circular ring
-    /// </summary>
     public void SpawnEnemy()
     {
         // 1. Determine center position
@@ -111,13 +94,8 @@ public class EnemySpawner : MonoBehaviour
         {
             newEnemy.AddComponent<TopDownEnemy>();
         }
-
-        Debug.Log($"<color=cyan>[SPAWNER]</color> Enemy spawned at: {spawnPos} (Distance: {randomDist:F1}m)");
     }
 
-    /// <summary>
-    ///     Draws gizmo circles in Scene view for visual debugging
-    /// </summary>
     private void OnDrawGizmosSelected()
     {
         Vector3 center = (spawnAroundPlayer && Application.isPlaying && playerTarget != null) 

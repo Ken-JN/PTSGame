@@ -5,59 +5,112 @@ using UnityEngine.UI;
 
 public class ItemSlot : MonoBehaviour, IPointerClickHandler
 {
-    // Item Data
+
     public string itemName;
     public int itemQuantity;
     public Sprite itemIcon;
     public bool isFull;
 
-    // The full data of the item in this slot (the details panel needs it)
-    public ItemDetails ItemDetails => itemDetails;
 
-    // Maximum number of items that fit in one slot
+    public ItemDetails ItemDetails => itemDetails;
+    public bool hasItem => itemDetails != null && itemQuantity > 0;
+
     [SerializeField] private int maxStackSize = 99;
 
-    // Item Slot
+    // Item Slot UI
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private Image itemImage;
     [SerializeField] private GameObject selectedPanel;
 
-    // The data of the item currently stored in this slot
+
     private ItemDetails itemDetails;
 
-    // The inventory that created this slot
+
     private InventoryManager inventory;
 
-    // Called by InventoryManager right after this slot is created
     public void Setup(InventoryManager owner)
     {
         inventory = owner;
+        itemDetails = null;
+        itemName = "";
+        itemQuantity = 0;
+        itemIcon = null;
+        isFull = false;
+
         SetSelected(false);
+        UpdateUI();
     }
 
     // Check if this slot can stack more of the same item
+    public bool CanStackWith(ItemDetails item)
+    {
+        if (!hasItem || item == null) return false;
+        if (itemQuantity >= maxStackSize) return false;
+        return itemName == item.ItemName || (itemDetails != null && itemDetails == item);
+    }
+
     public bool CanStackWith(string otherItemName)
     {
-        return !isFull && itemName == otherItemName;
+        if (!hasItem || string.IsNullOrEmpty(otherItemName)) return false;
+        if (itemQuantity >= maxStackSize) return false;
+        return itemName == otherItemName;
     }
 
     public void AddItem(ItemDetails item)
     {
         itemDetails = item;
         itemName = item.ItemName;
-        itemQuantity = item.Quantity;
+        itemQuantity = item.Quantity > 0 ? item.Quantity : 1;
         itemIcon = item.ItemIcon;
-        isFull = true;
+        isFull = itemQuantity >= maxStackSize;
 
-        quantityText.text = itemQuantity.ToString();
-        quantityText.enabled = true;
-        itemImage.sprite = itemIcon;
+        UpdateUI();
+    }
+
+    public void AddQuantity(int amount)
+    {
+        itemQuantity += amount;
+        isFull = itemQuantity >= maxStackSize;
+
+        UpdateUI();
+    }
+
+    public void UpdateUI()
+    {
+        if (hasItem)
+        {
+            if (itemImage != null)
+            {
+                itemImage.sprite = itemIcon;
+                itemImage.enabled = itemIcon != null;
+            }
+
+            if (quantityText != null)
+            {
+                quantityText.text = itemQuantity.ToString();
+                quantityText.enabled = true;
+            }
+        }
+        else
+        {
+            if (itemImage != null)
+            {
+                itemImage.sprite = null;
+                itemImage.enabled = false;
+            }
+
+            if (quantityText != null)
+            {
+                quantityText.text = "";
+                quantityText.enabled = false;
+            }
+        }
     }
 
     // Unity calls this when the player clicks on the slot
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!isFull || inventory == null)
+        if (!hasItem || inventory == null)
         {
             return; // empty slot: nothing to show
         }

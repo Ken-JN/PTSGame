@@ -3,21 +3,13 @@ using UnityEngine.Serialization;
 
 namespace TopDownCharacter2D.Health
 {
-    /// <summary>
-    ///     Attached to Enemies or Hazards (Spikes/Traps).
-    ///     Automatically deals contact damage when touching the Player.
-    /// </summary>
     public class ChangeHealthOnTouch : MonoBehaviour
     {
-        [Header("Contact Damage Settings")]
-        [Tooltip("Amount of damage dealt upon contact with target")]
         [FormerlySerializedAs("value")]
         [SerializeField] private float damage = 15f;
 
-        [Tooltip("Tag of valid targets to attack")]
         [SerializeField] private string targetTag = "Player";
 
-        [Tooltip("Cooldown delay in seconds between consecutive contact attacks")]
         [FormerlySerializedAs("jedaSerang")]
         [SerializeField] private float attackCooldown = 0.5f;
 

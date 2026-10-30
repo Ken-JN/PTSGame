@@ -2,12 +2,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-/// <summary>
-///     INVENTORY MANAGER
-///     - Toggles the Inventory panel when pressing "I"
-///     - Stores items collected by the player
-///     - Displays item details when a slot is clicked
-/// </summary>
 public class InventoryManager : MonoBehaviour, GrabableItem
 {
     private InputAction inventoryAction;
@@ -49,10 +43,8 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         {
             if (!InventoryActive)
             {
-                // Open Inventory
                 InventoryActive = true;
-                Time.timeScale = 0f; // Pause game while inventory is open
-                Debug.Log("<color=cyan>[INVENTORY]</color> Inventory Opened!");
+                Time.timeScale = 0f; 
                 InventoryCanvas.SetActive(true);
             }
             else
@@ -60,7 +52,6 @@ public class InventoryManager : MonoBehaviour, GrabableItem
                 // Close Inventory
                 InventoryActive = false;
                 Time.timeScale = 1f; // Resume game
-                Debug.Log("<color=cyan>[INVENTORY]</color> Inventory Closed!");
                 InventoryCanvas.SetActive(false);
             }
         }
@@ -108,24 +99,41 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         // Display item details on the right panel
         if (detailsPanel != null)
         {
-            detailsPanel.Show(slot.ItemDetails);
+            detailsPanel.Show(slot);
         }
     }
 
-    // Adds a collected item to an available empty slot
+    // Adds a collected item to an existing stack or an available empty slot
     public void AddItem(ItemDetails item)
     {
-        Debug.Log($"<color=green>[ITEM OBTAINED]</color> {item.ItemName} added to inventory!");
-
         if (itemSlot == null || itemSlot.Length == 0)
         {
             Debug.LogWarning("Inventory has no slots configured!");
             return;
         }
 
+        int quantityToAdd = item.Quantity > 0 ? item.Quantity : 1;
+
+        // 1. Try to stack into an existing slot containing the same item
         for (int i = 0; i < itemSlot.Length; i++)
         {
-            if (!itemSlot[i].isFull)
+            if (itemSlot[i] != null && itemSlot[i].CanStackWith(item))
+            {
+                itemSlot[i].AddQuantity(quantityToAdd);
+
+                // If this slot is currently selected, refresh details panel
+                if (selectedSlot == itemSlot[i] && detailsPanel != null)
+                {
+                    detailsPanel.Show(itemSlot[i]);
+                }
+                return;
+            }
+        }
+
+        // 2. If it cannot be stacked, find the first empty slot
+        for (int i = 0; i < itemSlot.Length; i++)
+        {
+            if (itemSlot[i] != null && !itemSlot[i].hasItem)
             {
                 itemSlot[i].AddItem(item);
                 return;

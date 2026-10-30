@@ -10,16 +10,30 @@ public class ItemDetailsPanel : MonoBehaviour
     [SerializeField] private TMP_Text itemDescriptionText;
 
     // Called by InventoryManager whenever the player selects a slot
-    public void Show(ItemDetails item)
+    public void Show(ItemSlot slot)
     {
-        if (item == null)
+        if (slot == null || slot.ItemDetails == null) return;
+        Show(slot.ItemDetails, slot.itemQuantity);
+    }
+
+    public void Show(ItemDetails item, int currentQuantity)
+    {
+        if (item == null) return;
+
+        if (itemImage != null)
         {
-            return;
+            itemImage.sprite = item.ItemIcon;
+            itemImage.enabled = item.ItemIcon != null;
         }
 
-        itemImage.sprite = item.ItemIcon;
-        itemNameText.text = item.ItemName;
-        itemQuantityText.text = "Quantity: " + item.Quantity;
-        itemDescriptionText.text = item.Description;
+        if (itemNameText != null) itemNameText.text = item.ItemName;
+        if (itemQuantityText != null) itemQuantityText.text = "Quantity: " + currentQuantity;
+        if (itemDescriptionText != null) itemDescriptionText.text = item.Description;
+    }
+
+    public void Show(ItemDetails item)
+    {
+        if (item == null) return;
+        Show(item, item.Quantity);
     }
 }

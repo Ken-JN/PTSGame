@@ -9,7 +9,6 @@ public class Enemy : MonoBehaviour, IDamageable
 
     protected Transform player;
 
-    [Header("State Machine")]
     [FormerlySerializedAs("JarakDeteksi")]
     [SerializeField] private float detectionRange = 6f;
 
@@ -19,7 +18,6 @@ public class Enemy : MonoBehaviour, IDamageable
     [FormerlySerializedAs("JedaSerang")]
     [SerializeField] private float attackCooldown = 0.3f;
 
-    [Header("Patrol")]
     [FormerlySerializedAs("radiusPatrol")]
     [SerializeField] private float patrolRadius = 3f;
     private Vector2 startingPoint;
@@ -103,7 +101,6 @@ public class Enemy : MonoBehaviour, IDamageable
 
     public virtual void Attack()
     {
-        Debug.Log("Enemy Attacks");
     }
 
     void IdleBehavior()
@@ -182,7 +179,6 @@ public class Enemy : MonoBehaviour, IDamageable
                 playerScript.TakeDamage(collisionDamage);
             }
 
-            Debug.Log($"<color=yellow>{gameObject.name} destroyed after attacking player!</color>");
             Destroy(gameObject);
         }
     }

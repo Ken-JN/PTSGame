@@ -3,87 +3,46 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
-/// <summary>
-///     ALL-IN-ONE PLAYER CONTROLLER
-///     Consolidates all modular top-down systems into ONE single clean script:
-///     1. TopDown Movement (4 directions, WASD / Arrow Keys / Input System)
-///     2. TopDown Aim & Flashlight (smooth rotation towards mouse cursor)
-///     3. TopDown Shooting (bullet projectile spawning, fire rate, and recoil)
-///     4. TopDown FX (dust particles while walking, hit/shoot sounds, and red flash)
-///     5. Health System & Healthbar UI (100 HP, smooth gradient, NO freeze on hit, freeze ONLY on death)
-///     6. TopDown Knockback (pushback impulse when taking damage)
-///     7. Sample Character Animation (IsWalking, Attack, Hurt triggers and sprite flip)
-///     8. Collectibles (coins and inventory items)
-/// </summary>
 public class Player : MonoBehaviour, IDamageable
 {
-    [Header("=== 1. MOVEMENT ===")]
-    [Tooltip("Movement speed in units per second")]
     public float moveSpeed = 5f;
     private Vector2 moveInput;
     private Rigidbody2D rb;
 
-    [Header("=== 2. AIMING & FLASHLIGHT ===")]
-    [Tooltip("Transform of the 2D Light or Flashlight attached to player")]
     public Transform playerLight;
-    [Tooltip("Transform of the weapon/arm pivot to aim with mouse")]
     public Transform weaponPivot;
-    [Tooltip("Rotation smoothness speed")]
     public float rotationSpeed = 15f;
     [Tooltip("Offset angle in degrees (default -90 for sprites pointing up)")]
     public float lightRotationOffset = -90f;
     private Vector2 aimDirection = Vector2.right;
     private Camera mainCamera;
 
-    [Header("=== 3. SHOOTING & ATTACK ===")]
-    [Tooltip("Point where bullets are spawned")]
     public Transform projectileSpawnPoint;
-    [Tooltip("Prefab of the bullet to shoot")]
     public GameObject bulletPrefab;
-    [Tooltip("Bullet flight speed")]
     public float bulletSpeed = 12f;
-    [Tooltip("Shooting delay between shots in seconds")]
     public float fireRate = 0.25f;
-    [Tooltip("Recoil pushback strength when firing")]
     public float recoilStrength = 1.5f;
     private float nextFireTime = 0f;
 
-    [Tooltip("Melee attack damage")]
     public float meleeDamage = 30f;
-    [Tooltip("Melee attack range circle")]
     public float meleeRange = 1.5f;
 
-    [Header("=== 4. HEALTH & HEALTHBAR ===")]
-    [Tooltip("Maximum health points")]
     public float maxHealth = 100f;
-    [Tooltip("Current health points (starts at 100)")]
     public float currentHealth = 100f;
-    [Tooltip("Invincibility duration in seconds after taking damage")]
     public float invincibilityDuration = 0.8f;
     private float lastDamageTime = -999f;
     private bool isDead = false;
 
-    [Tooltip("UI Slider to display health")]
     public Slider healthSlider;
-    [Tooltip("UI Image Fill for color transition (Green -> Yellow -> Red)")]
     public Image healthBarFill;
-    [Tooltip("Canvas holding the slider (World Space above player or Screen Space)")]
     public Canvas healthBarCanvas;
-    [Tooltip("Offset position above player head")]
     public Vector3 healthBarOffset = new Vector3(0f, 1.2f, 0f);
 
-    [Header("=== 5. KNOCKBACK ===")]
-    [Tooltip("Force pushed backwards when taking damage from an enemy")]
     public float damageKnockbackPower = 5f;
 
-    [Header("=== 6. ANIMATION & FX ===")]
-    [Tooltip("Particle system for dust when walking")]
     public ParticleSystem dustParticleSystem;
-    [Tooltip("Sound played when shooting")]
     public AudioClip shootSound;
-    [Tooltip("Sound played when taking damage")]
     public AudioClip hurtSound;
-    [Tooltip("Sound played upon death")]
     public AudioClip deathSound;
 
     private SpriteRenderer[] allRenderers;
@@ -93,7 +52,6 @@ public class Player : MonoBehaviour, IDamageable
     private static readonly int AttackHash = Animator.StringToHash("Attack");
     private static readonly int IsHurtHash = Animator.StringToHash("IsHurt");
 
-    [Header("=== 7. SCORE ===")]
     public int score = 0;
 
     private void Awake()
@@ -110,6 +68,8 @@ public class Player : MonoBehaviour, IDamageable
         allRenderers = GetComponentsInChildren<SpriteRenderer>();
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+        if (shootSound == null) shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        if (hurtSound == null) hurtSound = Resources.Load<AudioClip>("Sounds/Hurt");
 
         mainCamera = Camera.main;
 
@@ -394,7 +354,6 @@ public class Player : MonoBehaviour, IDamageable
         currentHealth -= damage;
         if (currentHealth < 0) currentHealth = 0;
 
-        Debug.Log($"<color=orange>[HIT]</color> Player took {damage} damage! Remaining HP: {currentHealth}/{maxHealth}");
 
         // Play hurt sound
         if (hurtSound != null && audioSource != null)
@@ -475,7 +434,6 @@ public class Player : MonoBehaviour, IDamageable
         if (isDead) return;
         isDead = true;
 
-        Debug.Log("<color=red><b>[GAME OVER] PLAYER HAS DIED! GAME FREEZES!</b></color>");
 
         if (deathSound != null && audioSource != null)
         {
@@ -520,8 +478,7 @@ public class Player : MonoBehaviour, IDamageable
         {
             Destroy(other.gameObject);
             score++;
-            Debug.Log($"<color=yellow>[COIN]</color> Collected! Current Score: {score}");
-
+        
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.CollectCoin();
@@ -535,12 +492,12 @@ public class Player : MonoBehaviour, IDamageable
                 GameManager.Instance.CollectGoldKey();
             }
         }
-        else if (other.CompareTag("FakeKey") && other.GetComponent<Item>() == null)
+        else if (other.CompareTag("SilverKey") && other.GetComponent<Item>() == null)
         {
             Destroy(other.gameObject);
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.CollectFakeKey();
+                GameManager.Instance.CollectSilverKey();
             }
         }
     }

@@ -3,33 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-/// <summary>
-///     MASTER ENEMY CONTROLLER (TOPDOWN ENEMY) - ALL-IN-ONE
-///     Comprehensive single enemy script:
-///     1. AI & Movement (Pursues player, flips body sprite, walking animation)
-///     2. Contact Attack (Deals damage to player upon collision or trigger)
-///     3. Health & Hurt Animation (Reduces HP, visual hit flash, squash recoil, hurt anim)
-///     4. Enemy Death (Self-destructs or destroyed, awards score points, does NOT freeze game)
-///     5. Knockback & Stagger (Hit stun and pushback when struck by projectiles)
-/// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 public class TopDownEnemy : MonoBehaviour, IDamageable
 {
-    [Header("=== 1. AI & MOVEMENT ===")]
-    [Tooltip("Enemy movement speed when chasing the player")]
     public float moveSpeed = 3f;
 
     [Tooltip("Detection distance to start chasing the player (in meters)")]
     public float followRange = 12f;
 
-    [Tooltip("Stop distance so the enemy does not overlap directly with the player")]
     public float stopDistance = 0.5f;
 
-    [Header("=== 2. CONTACT ATTACK ===")]
-    [Tooltip("Damage dealt to the Player upon contact")]
     public float contactDamage = 15f;
 
-    [Tooltip("If checked, the enemy is immediately destroyed after touching/attacking the Player")]
     [FormerlySerializedAs("hancurSetelahMenyerang")]
     public bool destroyOnAttack = true;
 
@@ -38,23 +23,20 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
     public float attackCooldown = 0.5f;
     private float lastAttackTime = -999f;
 
-    [Header("=== 3. HEALTH & DEATH SYSTEM ===")]
-    [Tooltip("Maximum health of the enemy")]
+    public AudioClip attackSound;
+
+    public AudioClip hurtSound;
+
     public float maxHealth = 50f;
 
-    [Tooltip("Current health of the enemy")]
     public float currentHealth = 50f;
 
-    [Tooltip("Flash color when hit by a bullet")]
     [FormerlySerializedAs("warnaKenaHit")]
     public Color hitFlashColor = new Color(1f, 0.1f, 0.1f, 1f);
 
-    [Tooltip("Score points awarded to player upon defeating this enemy")]
     [FormerlySerializedAs("poinSaatMati")]
     public int pointsOnDeath = 20;
 
-    [Header("=== 4. KNOCKBACK & HIT STUN ===")]
-    [Tooltip("Pushback impulse power when hit by bullets")]
     public float knockBackPower = 3f;
 
     // Internal components
@@ -121,6 +103,16 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
 
         // 5. Ensure full health on initialize
         currentHealth = maxHealth;
+
+        // 6. Audio fallback
+        if (attackSound == null)
+        {
+            attackSound = Resources.Load<AudioClip>("Sounds/Slash");
+        }
+        if (hurtSound == null)
+        {
+            hurtSound = Resources.Load<AudioClip>("Sounds/Hurt_enemy");
+        }
     }
 
     private void Start()
@@ -171,9 +163,6 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
         }
     }
 
-    /// <summary>
-    ///     Finds the Player GameObject in the scene using the "Player" tag
-    /// </summary>
     public void FindPlayer()
     {
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -183,9 +172,6 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
         }
     }
 
-    /// <summary>
-    ///     Moves the enemy towards the player position and flips body sprites
-    /// </summary>
     public void ChasePlayer()
     {
         if (playerTarget == null) return;
@@ -242,9 +228,6 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
         TryAttack(other.gameObject);
     }
 
-    /// <summary>
-    ///     Validates if the target is the Player and deals contact damage
-    /// </summary>
     public void TryAttack(GameObject target)
     {
         if (isDead || target == null) return;
@@ -285,7 +268,12 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
             animator.SetTrigger(AttackHash);
         }
 
-        Debug.Log($"<color=red>[ENEMY ATTACK]</color> {gameObject.name} attacked Player for {contactDamage} damage!");
+        // Play attack sound effect
+        if (attackSound != null)
+        {
+            TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(attackSound, transform.position);
+        }
+
 
         // Behaviour b: Enemy is destroyed after attacking/touching the player
         if (destroyOnAttack)
@@ -294,15 +282,12 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
         }
     }
 
-    /// <summary>
-    ///     Destroys the enemy after successfully attacking the Player
-    /// </summary>
     public void DestroyAfterAttack()
     {
         if (isDead) return;
         isDead = true;
 
-        Debug.Log($"<color=yellow>[ENEMY DESTROYED]</color> {gameObject.name} destroyed after attacking Player!");
+
 
         // Disable all colliders to prevent duplicate trigger during destruction
         Collider2D[] allColliders = GetComponentsInChildren<Collider2D>();
@@ -326,17 +311,11 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
     // 3. HEALTH & HURT ANIMATION SYSTEM
     // =========================================================================
 
-    /// <summary>
-    ///     Called when enemy is hit by a projectile or melee attack (IDamageable implementation)
-    /// </summary>
     public void TakeDamage(int damage)
     {
         TakeDamage((float)damage);
     }
 
-    /// <summary>
-    ///     Compatibility with TopDownController2D projectile system
-    /// </summary>
     public bool ChangeHealth(float change)
     {
         if (change < 0)
@@ -351,7 +330,12 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
         if (isDead) return false;
 
         currentHealth -= damageAmount;
-        Debug.Log($"<color=orange>[ENEMY HIT]</color> {gameObject.name} took {damageAmount} damage! Remaining HP: {currentHealth}/{maxHealth}");
+
+        // Play hurt sound effect
+        if (hurtSound != null)
+        {
+            TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(hurtSound, transform.position);
+        }
 
         // 1. Apply knockback impulse away from player if not already assigned by projectile
         if (knockbackVelocity == Vector2.zero && playerTarget != null)
@@ -467,9 +451,6 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
         hurtResetCoroutine = null;
     }
 
-    /// <summary>
-    ///     Applies knockback impulse away from the attacker
-    /// </summary>
     public void ApplyKnockBack(Transform attacker)
     {
         if (isDead || attacker == null) return;
@@ -495,7 +476,6 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
         if (isDead) return;
         isDead = true;
 
-        Debug.Log($"<color=green>[ENEMY DEFEATED]</color> Enemy '{gameObject.name}' defeated! (+{pointsOnDeath} Points)");
 
         // Disable all colliders so it cannot trigger further collisions
         Collider2D[] allColliders = GetComponentsInChildren<Collider2D>();
@@ -514,9 +494,6 @@ public class TopDownEnemy : MonoBehaviour, IDamageable
         Destroy(gameObject);
     }
 
-    /// <summary>
-    ///     Disables conflicting legacy modular components
-    /// </summary>
     public void DisableOldScripts()
     {
         string[] oldComponentNames =

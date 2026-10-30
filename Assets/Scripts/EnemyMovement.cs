@@ -1,28 +1,18 @@
 using UnityEngine;
 
-/// <summary>
-///     Complete Top-Down Enemy Controller
-///     Handles:
-///     1. Detecting and moving towards the Player
-///     2. Flipping sprite to face the Player
-///     3. Damaging the Player and IMMEDIATELY DESTROYING ITSELF upon attack
-///     4. Taking damage from the Player (IDamageable)
-/// </summary>
 public class EnemyMovement : MonoBehaviour, IDamageable
 {
-    [Header("Movement Settings")]
-    [Tooltip("Movement speed while chasing player")]
     public float moveSpeed = 2.5f;
 
-    [Tooltip("Minimum distance to player before attacking")]
     public float stoppingDistance = 0.5f;
 
-    [Header("Combat Settings")]
-    [Tooltip("Damage dealt to player on contact")]
     public float attackDamage = 15f;
 
-    [Tooltip("Enemy health points")]
     public float health = 50f;
+
+    public AudioClip attackSound;
+
+    public AudioClip hurtSound;
 
     private Transform playerTarget;
     private SpriteRenderer spriteRenderer;
@@ -33,6 +23,8 @@ public class EnemyMovement : MonoBehaviour, IDamageable
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
+        if (attackSound == null) attackSound = Resources.Load<AudioClip>("Sounds/Slash");
+        if (hurtSound == null) hurtSound = Resources.Load<AudioClip>("Sounds/Hurt_enemy");
     }
 
     private void Start()
@@ -112,7 +104,12 @@ public class EnemyMovement : MonoBehaviour, IDamageable
 
         hasAttacked = true;
 
-        Debug.Log($"<color=red>[ENEMY ATTACK]</color> {gameObject.name} attacked Player dealing {attackDamage} damage!");
+        if (attackSound != null)
+        {
+            TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(attackSound, transform.position);
+        }
+
+    
 
         // 1. Deal damage to player via PlayerMovement
         PlayerMovement player = target.GetComponentInParent<PlayerMovement>();
@@ -135,7 +132,7 @@ public class EnemyMovement : MonoBehaviour, IDamageable
         if (col != null) col.enabled = false;
 
         // 3. DESTROY SELF IMMEDIATELY AFTER ATTACKING
-        Debug.Log($"<color=yellow>[DESTROY]</color> {gameObject.name} is destroyed after attacking!");
+
         Destroy(gameObject);
     }
 
@@ -150,7 +147,11 @@ public class EnemyMovement : MonoBehaviour, IDamageable
     public void TakeDamage(float damageAmount)
     {
         health -= damageAmount;
-        Debug.Log($"<color=cyan>[ENEMY HIT]</color> {gameObject.name} took {damageAmount} damage! Remaining HP: {health}");
+        if (hurtSound != null)
+        {
+            TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(hurtSound, transform.position);
+        }
+       
 
         if (health <= 0)
         {
@@ -160,7 +161,6 @@ public class EnemyMovement : MonoBehaviour, IDamageable
 
     private void Die()
     {
-        Debug.Log($"<color=green>[ENEMY DEFEATED]</color> {gameObject.name} has been killed!");
         Destroy(gameObject);
     }
 }
