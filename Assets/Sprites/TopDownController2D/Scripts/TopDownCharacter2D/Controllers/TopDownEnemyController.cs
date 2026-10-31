@@ -3,9 +3,7 @@ using UnityEngine;
 
 namespace TopDownCharacter2D.Controllers
 {
-    /// <summary>
-    ///     A basic controller for an enemy
-    /// </summary>
+
     public abstract class TopDownEnemyController : TopDownCharacterController
     {
         [Tooltip("The tag of the target of this enemy")] [SerializeField]
@@ -26,10 +24,6 @@ namespace TopDownCharacter2D.Controllers
             ClosestTarget = FindClosestTarget();
         }
 
-        /// <summary>
-        ///     Returns the closest valid target
-        /// </summary>
-        /// <returns> The transform of the closest target</returns>
         private Transform FindClosestTarget()
         {
             return GameObject.FindGameObjectsWithTag(targetTag)
@@ -37,19 +31,12 @@ namespace TopDownCharacter2D.Controllers
                 .First().transform;
         }
 
-        /// <summary>
-        ///     Computes and returns the distance to the closest target
-        /// </summary>
-        /// <returns></returns>
         protected float DistanceToTarget()
         {
             return Vector3.Distance(transform.position, ClosestTarget.transform.position);
         }
 
-        /// <summary>
-        ///     Computes and returns the direction toward the closest target
-        /// </summary>
-        /// <returns></returns>
+      
         protected Vector2 DirectionToTarget()
         {
             return (ClosestTarget.transform.position - transform.position).normalized;

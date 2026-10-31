@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class EnemyChildren : Enemy
 {
-    public void Attack()
+    public override void Attack()
     {
         Debug.Log("Children Attacking");
     }

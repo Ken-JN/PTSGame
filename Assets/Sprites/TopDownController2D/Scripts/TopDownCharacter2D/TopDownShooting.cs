@@ -5,9 +5,7 @@ using UnityEngine;
 
 namespace TopDownCharacter2D
 {
-    /// <summary>
-    ///     This class contains the logic for a shooting behaviour in a 2D context with a topdown view
-    /// </summary>
+  
     [RequireComponent(typeof(TopDownCharacterController))]
     public class TopDownShooting : MonoBehaviour
     {

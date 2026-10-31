@@ -2,10 +2,6 @@
 
 namespace TopDownCharacter2D.Controllers
 {
-    /// <summary>
-    ///     A simple ranged enemy AI, this AI will simply try to get close enough to the player and then shoot in its
-    ///     direction
-    /// </summary>
     public class TopDownRangeEnemyController : TopDownEnemyController
     {
         [SerializeField] private float followRange = 15f;

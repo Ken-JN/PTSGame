@@ -2,9 +2,7 @@
 
 namespace TopDownCharacter2D.Attacks.Range
 {
-    /// <summary>
-    ///     This class contains the configuration of a ranged attack
-    /// </summary>
+
     [CreateAssetMenu(fileName = "RangedAttackConfig", menuName = "TopDownController/Attacks/Range", order = 0)]
     public class RangedAttackConfig : AttackConfig
     {

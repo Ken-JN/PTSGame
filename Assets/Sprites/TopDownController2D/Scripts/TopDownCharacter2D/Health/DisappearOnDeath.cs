@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace TopDownCharacter2D.Health
 {
-    /// <summary>
-    ///     Handles the removal of an entity when it dies
-    /// </summary>
     public class DisappearOnDeath : MonoBehaviour
     {
         [Tooltip("Delay in seconds before the GameObject is destroyed on death")]

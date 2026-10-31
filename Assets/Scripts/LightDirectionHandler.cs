@@ -1,10 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-///     Handles 2D flashlight rotation to smoothly follow the mouse cursor
-///     Compatible with both New Input System and Legacy Input.
-/// </summary>
 public class LightDirectionHandler : MonoBehaviour
 {
     [Header("References")]

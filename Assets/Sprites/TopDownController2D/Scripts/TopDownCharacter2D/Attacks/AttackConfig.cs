@@ -2,9 +2,7 @@
 
 namespace TopDownCharacter2D.Attacks
 {
-    /// <summary>
-    ///     The base class for an attack configuration
-    /// </summary>
+
     public abstract class AttackConfig : ScriptableObject
     {
         [Tooltip("The scale of the attack")]

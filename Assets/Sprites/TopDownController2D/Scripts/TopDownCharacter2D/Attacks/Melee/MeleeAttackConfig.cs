@@ -2,9 +2,7 @@
 
 namespace TopDownCharacter2D.Attacks.Melee
 {
-    /// <summary>
-    ///     This class contains the configuration of a melee attack
-    /// </summary>
+
     [CreateAssetMenu(fileName = "MeleeConfig", menuName = "TopDownController/Attacks/Melee", order = 0)]
     public class MeleeAttackConfig : AttackConfig
     {

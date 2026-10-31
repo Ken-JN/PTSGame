@@ -37,7 +37,6 @@ public class Item : MonoBehaviour
         {
             string itemName = ItemDetails.ItemName.ToLower();
 
-            // 1. Silver Key
             if (itemName.Contains("silver") || CompareTag("SilverKey"))
             {
                 if (GameManager.Instance != null)
@@ -49,7 +48,6 @@ public class Item : MonoBehaviour
                     TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(pickupSound);
                 }
             }
-            // 2. Gold Key
             else if (itemName.Contains("gold") || CompareTag("GoldKey"))
             {
                 if (GameManager.Instance != null)
@@ -61,7 +59,6 @@ public class Item : MonoBehaviour
                     TopDownCharacter2D.FX.SoundManager.PlaySoundEffect(pickupSound);
                 }
             }
-            // 3. Other items
             else
             {
                 if (GameManager.Instance != null)
@@ -74,7 +71,6 @@ public class Item : MonoBehaviour
                 }
             }
 
-            // 4. Add to player inventory
             if (itemCollector == null)
             {
                 FindInventoryCollector();
@@ -86,7 +82,6 @@ public class Item : MonoBehaviour
             }
         }
 
-        // Destroy item object in arena after pickup
         Destroy(gameObject);
     }
 }

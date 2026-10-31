@@ -9,9 +9,6 @@ using UnityEngine.Events;
 
 namespace TopDownCharacter2D.FX
 {
-    /// <summary>
-    ///     This class contains the logic behind the creation of both visual and sound effects
-    /// </summary>
     public class TopDownFx : MonoBehaviour
     {
         [SerializeField] private List<Effect> effects;
@@ -50,12 +47,7 @@ namespace TopDownCharacter2D.FX
             }
         }
 
-        /// <summary>
-        ///     Tries to add a listener for the given event
-        /// </summary>
-        /// <param name="evt"> The unity event object</param>
-        /// <param name="evtTrigger"> The trigger event</param>
-        private void TryAddListener(object evt, TriggerEvents evtTrigger)
+          private void TryAddListener(object evt, TriggerEvents evtTrigger)
         {
             if (effects.All(effect => effect.triggerEvent != evtTrigger))
             {
@@ -80,11 +72,7 @@ namespace TopDownCharacter2D.FX
             }
         }
 
-        /// <summary>
-        ///     Trigger all the effects related to the given event
-        /// </summary>
-        /// <param name="triggerEvent"> The event who has been invoked </param>
-        /// <param name="attackConfig"> The configuration of the attack </param>
+       
         private void TriggerEffects(TriggerEvents triggerEvent, AttackConfig attackConfig)
         {
             foreach (Effect effect in effects)
@@ -106,10 +94,6 @@ namespace TopDownCharacter2D.FX
             }
         }
 
-        /// <summary>
-        ///     Trigger all the effects related to the given event
-        /// </summary>
-        /// <param name="triggerEvent"> The event who has been invoked </param>
         private void TriggerEffects(TriggerEvents triggerEvent)
         {
             foreach (Effect effect in effects)
@@ -131,19 +115,12 @@ namespace TopDownCharacter2D.FX
             }
         }
 
-        /// <summary>
-        ///     Creates a single burst of particles from the given particle system
-        /// </summary>
-        /// <param name="ps"> The particle system to emit from </param>
+    
         private static void CreateParticles(ParticleSystem ps)
         {
             ps.Stop();
             ps.Play();
         }
-
-        /// <summary>
-        ///     Plays a given sound effect
-        /// </summary>
         private void StartSoundEffect(AudioClip clip)
         {
             SoundManager.PlaySoundEffect(clip);

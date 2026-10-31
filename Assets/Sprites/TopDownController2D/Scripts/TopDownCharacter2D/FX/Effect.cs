@@ -3,9 +3,7 @@ using UnityEngine;
 
 namespace TopDownCharacter2D.FX
 {
-    /// <summary>
-    ///     The different events that can trigger an effect
-    /// </summary>
+  
     public enum TriggerEvents
     {
         Walk,
@@ -18,9 +16,6 @@ namespace TopDownCharacter2D.FX
         Pickup
     }
 
-    /// <summary>
-    ///     This class represent an effect that will be editable in the Unity's inspector
-    /// </summary>
     [Serializable]
     public class Effect
     {

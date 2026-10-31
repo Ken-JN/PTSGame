@@ -28,7 +28,6 @@ public class InventoryManager : MonoBehaviour, GrabableItem
 
     void Update()
     {
-        // Detect if the I key or Inventory action is triggered
         bool isPressed = false;
         if (inventoryAction != null && inventoryAction.triggered)
         {
@@ -49,15 +48,13 @@ public class InventoryManager : MonoBehaviour, GrabableItem
             }
             else
             {
-                // Close Inventory
                 InventoryActive = false;
-                Time.timeScale = 1f; // Resume game
+                Time.timeScale = 1f;
                 InventoryCanvas.SetActive(false);
             }
         }
     }
 
-    // Automatically instantiate slots in grid layout
     private void CreateSlots()
     {
         if (InventoryCanvas == null) return;
@@ -65,7 +62,6 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         ItemSlot slotPrefab = Resources.Load<ItemSlot>("ItemSlot");
         if (slotPrefab == null)
         {
-            Debug.LogError("Prefab ItemSlot not found in Resources folder.", this);
             itemSlot = new ItemSlot[0];
             return;
         }
@@ -85,7 +81,6 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         }
     }
 
-    // Called when the player clicks on an item slot
     public void SelectSlot(ItemSlot slot)
     {
         if (selectedSlot != null)
@@ -96,32 +91,24 @@ public class InventoryManager : MonoBehaviour, GrabableItem
         selectedSlot = slot;
         slot.SetSelected(true);
 
-        // Display item details on the right panel
         if (detailsPanel != null)
         {
             detailsPanel.Show(slot);
         }
     }
 
-    // Adds a collected item to an existing stack or an available empty slot
     public void AddItem(ItemDetails item)
     {
-        if (itemSlot == null || itemSlot.Length == 0)
-        {
-            Debug.LogWarning("Inventory has no slots configured!");
-            return;
-        }
+        if (itemSlot == null || itemSlot.Length == 0) return;
 
         int quantityToAdd = item.Quantity > 0 ? item.Quantity : 1;
 
-        // 1. Try to stack into an existing slot containing the same item
         for (int i = 0; i < itemSlot.Length; i++)
         {
             if (itemSlot[i] != null && itemSlot[i].CanStackWith(item))
             {
                 itemSlot[i].AddQuantity(quantityToAdd);
 
-                // If this slot is currently selected, refresh details panel
                 if (selectedSlot == itemSlot[i] && detailsPanel != null)
                 {
                     detailsPanel.Show(itemSlot[i]);
@@ -130,7 +117,6 @@ public class InventoryManager : MonoBehaviour, GrabableItem
             }
         }
 
-        // 2. If it cannot be stacked, find the first empty slot
         for (int i = 0; i < itemSlot.Length; i++)
         {
             if (itemSlot[i] != null && !itemSlot[i].hasItem)
@@ -139,7 +125,5 @@ public class InventoryManager : MonoBehaviour, GrabableItem
                 return;
             }
         }
-
-        Debug.LogWarning("Inventory is full!");
     }
 }

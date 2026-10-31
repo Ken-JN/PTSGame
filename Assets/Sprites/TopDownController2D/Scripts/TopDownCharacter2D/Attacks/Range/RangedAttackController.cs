@@ -3,9 +3,7 @@ using UnityEngine;
 
 namespace TopDownCharacter2D.Attacks.Range
 {
-    /// <summary>
-    ///     This script handles the logic of a single bullet
-    /// </summary>
+
     public class RangedAttackController : MonoBehaviour
     {
         [Tooltip("The layer of the walls of the level")] [SerializeField]
@@ -106,12 +104,7 @@ namespace TopDownCharacter2D.Attacks.Range
             }
         }
 
-        /// <summary>
-        ///     Initializes the ranged attack with the given configuration
-        /// </summary>
-        /// <param name="direction"> The direction of the attack </param>
-        /// <param name="config"> The parameters of the ranged attack</param>
-        /// <param name="projectileManager"></param>
+      
         public void InitializeAttack(Vector2 direction, RangedAttackConfig config, ProjectileManager projectileManager)
         {
             _projectileManager = projectileManager;
@@ -126,19 +119,13 @@ namespace TopDownCharacter2D.Attacks.Range
             _isReady = true;
         }
 
-        /// <summary>
-        ///     Changes the sprite of the projectile according to its size
-        /// </summary>
+       
         private void UpdateProjectileSprite()
         {
             transform.localScale = Vector3.one * _config.size;
         }
 
-        /// <summary>
-        ///     Destroys the projectile
-        /// </summary>
-        /// <param name="pos">The position where to create the particles</param>
-        /// <param name="createFx">Whether to create particles or not</param>
+       
         private void DestroyProjectile(Vector2 pos, bool createFx)
         {
             if (createFx)

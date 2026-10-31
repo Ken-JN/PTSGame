@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace TopDownCharacter2D.Attacks.Melee
 {
-    /// <summary>
-    ///     Contains the logic for a single melee attack
-    /// </summary>
     public class MeleeAttackController : MonoBehaviour
     {
         private MeleeAttackConfig attackConfig;
@@ -58,10 +55,7 @@ namespace TopDownCharacter2D.Attacks.Melee
             }
         }
 
-        /// <summary>
-        ///     Initializes the properties of the attack
-        /// </summary>
-        /// <param name="attackConfig"> The configuration of the attack </param>
+        
         public void InitializeAttack(MeleeAttackConfig attackConfig)
         {
             _transform = transform;
@@ -78,9 +72,7 @@ namespace TopDownCharacter2D.Attacks.Melee
             _isReady = true;
         }
 
-        /// <summary>
-        ///     Computes the start and end swing rotation of the melee attack based on the swingAngle of the configuration
-        /// </summary>
+       
         private void ComputeSwingRotations()
         {
             Quaternion rotation = _transform.rotation;
@@ -88,9 +80,7 @@ namespace TopDownCharacter2D.Attacks.Melee
             _endRotation = rotation * Quaternion.Euler(0, 0, attackConfig.swingAngle);
         }
 
-        /// <summary>
-        ///     Computes the start and end thrust position of the melee attack based on the thrustDistance of the configuration
-        /// </summary>
+        
         private void ComputeThrustPositions()
         {
             Vector3 position = _transform.localPosition;
@@ -98,17 +88,13 @@ namespace TopDownCharacter2D.Attacks.Melee
             _endPosition = position + new Vector3(attackConfig.thrustDistance, 0, 0);
         }
 
-        /// <summary>
-        ///     Changes the scale of the attack to match the size in the configuration
-        /// </summary>
+      
         private void ScaleAttack()
         {
             transform.localScale = new Vector3(attackConfig.size, attackConfig.size, attackConfig.size);
         }
 
-        /// <summary>
-        ///     Destroys the attack
-        /// </summary>
+    
         private void DestroyAttack()
         {
             Destroy(gameObject);

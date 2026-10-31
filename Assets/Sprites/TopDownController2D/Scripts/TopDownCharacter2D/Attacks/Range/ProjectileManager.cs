@@ -2,9 +2,7 @@
 
 namespace TopDownCharacter2D.Attacks.Range
 {
-    /// <summary>
-    ///     Handles the pool of projectiles and their creation
-    /// </summary>
+
     public class ProjectileManager : MonoBehaviour
     {
         [SerializeField] private ParticleSystem _impactParticleSystem;
@@ -33,12 +31,7 @@ namespace TopDownCharacter2D.Attacks.Range
             _impactParticleSystem.Play();
         }
 
-        /// <summary>
-        ///     Create a projectile from the pool and initialize it
-        /// </summary>
-        /// <param name="startPosition"> The start position of the projectile</param>
-        /// <param name="direction"> The direction of the projectile</param>
-        /// <param name="config"> The parameters of the projectile to shoot</param>
+   
         public void ShootBullet(Vector2 startPosition, Vector2 direction, RangedAttackConfig config)
         {
             GameObject projectileObject = _projectilesPool.GetPooledObject();

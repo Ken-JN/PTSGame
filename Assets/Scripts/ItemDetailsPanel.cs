@@ -9,7 +9,6 @@ public class ItemDetailsPanel : MonoBehaviour
     [SerializeField] private TMP_Text itemQuantityText;
     [SerializeField] private TMP_Text itemDescriptionText;
 
-    // Called by InventoryManager whenever the player selects a slot
     public void Show(ItemSlot slot)
     {
         if (slot == null || slot.ItemDetails == null) return;

@@ -53,6 +53,8 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        Time.timeScale = 1f;
+
         if (winPanel != null)
         {
             winPanel.SetActive(false);
@@ -68,7 +70,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (diePanel != null && diePanel.activeSelf)
+        if ((diePanel != null && diePanel.activeSelf) || (winPanel != null && winPanel.activeSelf))
         {
             if (Input.GetKeyDown(KeyCode.R))
             {

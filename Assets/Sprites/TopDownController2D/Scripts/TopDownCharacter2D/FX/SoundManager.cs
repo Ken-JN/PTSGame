@@ -2,9 +2,7 @@ using UnityEngine;
 
 namespace TopDownCharacter2D.FX
 {
-    /// <summary>
-    ///     Manages the game's sounds (sound effects and background music)
-    /// </summary>
+
     [RequireComponent(typeof(AudioSource))]
     public class SoundManager : MonoBehaviour
     {
@@ -25,29 +23,17 @@ namespace TopDownCharacter2D.FX
             musicAudioSource = GetComponent<AudioSource>();
         }
 
-        /// <summary>
-        ///     Play a sound effect at the given position
-        /// </summary>
-        /// <param name="audio"> The sound effect to play</param>
-        /// <param name="position"> The position where to play the sound</param>
+
         public static void PlaySoundEffect(AudioClip audio, Vector3 position)
         {
             PlayClipAt(audio, position, true);
         }
 
-        /// <summary>
-        ///     Play a sound effect globally (2D)
-        /// </summary>
-        /// <param name="audio"> The sound effect to play</param>
         public static void PlaySoundEffect(AudioClip audio)
         {
             PlayClipAt(audio, Vector3.zero, false);
         }
 
-        /// <summary>
-        ///     Changes the background music
-        /// </summary>
-        /// <param name="music"> The new music to play</param>
         public static void ChangeBackGroundMusic(AudioClip music)
         {
             if (instance == null || music == null) return;
@@ -61,13 +47,7 @@ namespace TopDownCharacter2D.FX
             }
         }
 
-        /// <summary>
-        ///     Creates and plays a temporary AudioSource to play a single sound
-        /// </summary>
-        /// <param name="clip"> The clip to play</param>
-        /// <param name="pos"> The position where to play the clip</param>
-        /// <param name="spatialize"> Whether to spatialize the sound or not</param>
-        private static void PlayClipAt(AudioClip clip, Vector3 pos, bool spatialize)
+              private static void PlayClipAt(AudioClip clip, Vector3 pos, bool spatialize)
         {
             if (clip == null) return;
 
@@ -99,7 +79,7 @@ namespace TopDownCharacter2D.FX
             source.clip = clip;
             source.volume = volume;
             source.pitch = 1f + Random.Range(-pitchVariance, pitchVariance);
-            source.spatialBlend = spatialize ? 1f : 0f; // 0 = 2D (clear stereo everywhere), 1 = 3D
+            source.spatialBlend = spatialize ? 1f : 0f; 
             source.playOnAwake = false;
             source.Play();
 

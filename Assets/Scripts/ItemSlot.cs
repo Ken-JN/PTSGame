@@ -5,27 +5,21 @@ using UnityEngine.UI;
 
 public class ItemSlot : MonoBehaviour, IPointerClickHandler
 {
-
     public string itemName;
     public int itemQuantity;
     public Sprite itemIcon;
     public bool isFull;
-
 
     public ItemDetails ItemDetails => itemDetails;
     public bool hasItem => itemDetails != null && itemQuantity > 0;
 
     [SerializeField] private int maxStackSize = 99;
 
-    // Item Slot UI
     [SerializeField] private TMP_Text quantityText;
     [SerializeField] private Image itemImage;
     [SerializeField] private GameObject selectedPanel;
 
-
     private ItemDetails itemDetails;
-
-
     private InventoryManager inventory;
 
     public void Setup(InventoryManager owner)
@@ -41,7 +35,6 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
         UpdateUI();
     }
 
-    // Check if this slot can stack more of the same item
     public bool CanStackWith(ItemDetails item)
     {
         if (!hasItem || item == null) return false;
@@ -107,18 +100,12 @@ public class ItemSlot : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    // Unity calls this when the player clicks on the slot
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!hasItem || inventory == null)
-        {
-            return; // empty slot: nothing to show
-        }
-
+        if (!hasItem || inventory == null) return;
         inventory.SelectSlot(this);
     }
 
-    // Show or hide the selection highlight of this slot
     public void SetSelected(bool selected)
     {
         if (selectedPanel != null)

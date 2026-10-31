@@ -12,7 +12,6 @@ public class Player : MonoBehaviour, IDamageable
     public Transform playerLight;
     public Transform weaponPivot;
     public float rotationSpeed = 15f;
-    [Tooltip("Offset angle in degrees (default -90 for sprites pointing up)")]
     public float lightRotationOffset = -90f;
     private Vector2 aimDirection = Vector2.right;
     private Camera mainCamera;
@@ -37,7 +36,6 @@ public class Player : MonoBehaviour, IDamageable
     public Image healthBarFill;
     public Canvas healthBarCanvas;
     public Vector3 healthBarOffset = new Vector3(0f, 1.2f, 0f);
-
     public float damageKnockbackPower = 5f;
 
     public ParticleSystem dustParticleSystem;
@@ -45,67 +43,38 @@ public class Player : MonoBehaviour, IDamageable
     public AudioClip hurtSound;
     public AudioClip deathSound;
 
+    public int score = 0;
+
     private SpriteRenderer[] allRenderers;
     private Animator animator;
-    private AudioSource audioSource;
-    private static readonly int IsWalkingHash = Animator.StringToHash("IsWalking");
-    private static readonly int AttackHash = Animator.StringToHash("Attack");
-    private static readonly int IsHurtHash = Animator.StringToHash("IsHurt");
-
-    public int score = 0;
 
     private void Awake()
     {
-        // 1. Ensure time scale is running normally
         Time.timeScale = 1f;
-
-        // 2. Health is full immediately in Awake (never starts at 0!)
         currentHealth = maxHealth;
 
-        // 3. Cache components
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponentInChildren<Animator>();
         allRenderers = GetComponentsInChildren<SpriteRenderer>();
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
-        if (shootSound == null) shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
-        if (hurtSound == null) hurtSound = Resources.Load<AudioClip>("Sounds/Hurt");
-
         mainCamera = Camera.main;
 
-        // 4. Auto-detect child Light 2D if not assigned
         if (playerLight == null)
         {
             var light2D = GetComponentInChildren<UnityEngine.Rendering.Universal.Light2D>();
             if (light2D != null) playerLight = light2D.transform;
         }
 
-        // 5. Auto-detect projectile spawn point
         if (projectileSpawnPoint == null)
         {
-            Transform foundSpawn = transform.Find("WeaponPivot/BulletSpawnPoint");
-            if (foundSpawn != null) projectileSpawnPoint = foundSpawn;
-            else projectileSpawnPoint = transform;
+            projectileSpawnPoint = transform;
         }
 
-        // 6. Auto-detect UI components
-        if (healthSlider != null)
-        {
-            if (healthBarCanvas == null) healthBarCanvas = healthSlider.GetComponentInParent<Canvas>();
-            if (healthBarFill == null && healthSlider.fillRect != null) healthBarFill = healthSlider.fillRect.GetComponent<Image>();
-        }
+        if (shootSound == null) shootSound = Resources.Load<AudioClip>("Sounds/Shoot");
+        if (hurtSound == null) hurtSound = Resources.Load<AudioClip>("Sounds/Hurt");
     }
 
     private void Start()
     {
-        currentHealth = maxHealth;
-
-        if (healthSlider != null)
-        {
-            healthSlider.minValue = 0f;
-            healthSlider.maxValue = 1f;
-        }
-
         UpdateHealthBarUI();
     }
 
@@ -113,46 +82,35 @@ public class Player : MonoBehaviour, IDamageable
     {
         if (isDead) return;
 
-        // 1. Movement input
-        ReadMovementInput();
+        HandleInput();
+        HandleAiming();
 
-        // 2. Aiming & mouse tracking
-        CalculateAimDirection();
+        bool isShooting = Input.GetMouseButton(0);
+        if (Mouse.current != null && Mouse.current.leftButton.isPressed) isShooting = true;
 
-        // 3. Visuals & animations
-        UpdateVisuals();
-
-        // 4. Shooting input (Left Mouse Click)
-        if (Mouse.current != null && Mouse.current.leftButton.isPressed)
+        if (isShooting && Time.time >= nextFireTime)
         {
-            TryShoot();
+            nextFireTime = Time.time + fireRate;
+            Shoot();
         }
 
-        // 5. Melee attack input (Spacebar)
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
+        bool isMelee = Input.GetKeyDown(KeyCode.Space);
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) isMelee = true;
+
+        if (isMelee)
         {
-            PerformMeleeAttack();
+            PerformMelee();
         }
     }
 
     private void FixedUpdate()
     {
         if (isDead) return;
-
-        // Apply movement physics
-        if (rb != null)
-        {
-            rb.linearVelocity = moveInput * moveSpeed;
-        }
-        else
-        {
-            transform.position += (Vector3)(moveInput * moveSpeed * Time.fixedDeltaTime);
-        }
+        if (rb != null) rb.linearVelocity = moveInput * moveSpeed;
     }
 
     private void LateUpdate()
     {
-        // Keep world space healthbar upright and positioned above player head
         if (healthBarCanvas != null && healthBarCanvas.renderMode == RenderMode.WorldSpace)
         {
             healthBarCanvas.transform.position = transform.position + healthBarOffset;
@@ -160,272 +118,140 @@ public class Player : MonoBehaviour, IDamageable
         }
     }
 
-    // ========================================================
-    // 1. MOVEMENT INPUT (4 DIRECTIONS)
-    // ========================================================
-    private void ReadMovementInput()
+    private void HandleInput()
     {
-        float inputX = 0f;
-        float inputY = 0f;
+        float x = Input.GetAxisRaw("Horizontal");
+        float y = Input.GetAxisRaw("Vertical");
 
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) inputY = 1f;
-            else if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) inputY = -1f;
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) x = -1;
+            else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) x = 1;
 
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) inputX = 1f;
-            else if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) inputX = -1f;
+            if (Keyboard.current.sKey.isPressed || Keyboard.current.downArrowKey.isPressed) y = -1;
+            else if (Keyboard.current.wKey.isPressed || Keyboard.current.upArrowKey.isPressed) y = 1;
+        }
 
-            moveInput = new Vector2(inputX, inputY).normalized;
+        moveInput = new Vector2(x, y).normalized;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsWalking", moveInput.sqrMagnitude > 0.01f);
         }
     }
 
-    public void OnMove(InputValue value)
-    {
-        moveInput = value.Get<Vector2>();
-    }
-
-    public void OnFire()
-    {
-        TryShoot();
-    }
-
-    // ========================================================
-    // 2. AIMING & FLASHLIGHT ROTATION
-    // ========================================================
-    private void CalculateAimDirection()
+    private void HandleAiming()
     {
         if (mainCamera == null) mainCamera = Camera.main;
         if (mainCamera == null) return;
 
-        Vector2 mouseScreen;
-        if (Mouse.current != null)
-        {
-            mouseScreen = Mouse.current.position.ReadValue();
-        }
-        else
-        {
-            mouseScreen = Input.mousePosition;
-        }
+        Vector3 mouseScreen = Input.mousePosition;
+        if (Mouse.current != null) mouseScreen = Mouse.current.position.ReadValue();
 
-        Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(new Vector3(mouseScreen.x, mouseScreen.y, -mainCamera.transform.position.z));
-        mouseWorld.z = 0f;
-
-        Vector2 playerPos = (Vector2)transform.position;
-        aimDirection = (Vector2)(mouseWorld - transform.position).normalized;
+        Vector3 mouseWorld = mainCamera.ScreenToWorldPoint(mouseScreen);
+        aimDirection = ((Vector2)(mouseWorld - transform.position)).normalized;
 
         float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
 
-        // Rotate flashlight
+        bool flip = aimDirection.x < 0;
+        foreach (var sr in allRenderers)
+        {
+            if (sr != null) sr.flipX = flip;
+        }
+
         if (playerLight != null)
         {
-            Quaternion targetRot = Quaternion.Euler(0f, 0f, angle + lightRotationOffset);
-            playerLight.rotation = Quaternion.Lerp(playerLight.rotation, targetRot, Time.deltaTime * rotationSpeed);
+            playerLight.rotation = Quaternion.Euler(0, 0, angle + lightRotationOffset);
         }
 
-        // Rotate weapon pivot
         if (weaponPivot != null)
         {
-            weaponPivot.rotation = Quaternion.Euler(0f, 0f, angle);
+            weaponPivot.rotation = Quaternion.Euler(0, 0, angle);
         }
     }
 
-    // ========================================================
-    // 3. ANIMATION & FX
-    // ========================================================
-    private void UpdateVisuals()
+    private void Shoot()
     {
-        bool isMoving = moveInput.sqrMagnitude > 0.01f;
-
-        // Flip sprites horizontally to face aim/movement direction
-        if (allRenderers != null && allRenderers.Length > 0)
+        if (bulletPrefab != null && projectileSpawnPoint != null)
         {
-            bool faceLeft = aimDirection.x < 0;
-            foreach (var sr in allRenderers)
-            {
-                sr.flipX = faceLeft;
-            }
-        }
-
-        // Animator parameters
-        if (animator != null)
-        {
-            animator.SetBool(IsWalkingHash, isMoving);
-            animator.SetBool("isMoving", isMoving);
-            animator.SetFloat("Speed", moveInput.sqrMagnitude);
-        }
-
-        // Dust particle system
-        if (dustParticleSystem != null)
-        {
-            if (isMoving && !dustParticleSystem.isPlaying) dustParticleSystem.Play();
-            else if (!isMoving && dustParticleSystem.isPlaying) dustParticleSystem.Stop();
-        }
-    }
-
-    // ========================================================
-    // 4. SHOOTING & ATTACK
-    // ========================================================
-    public void TryShoot()
-    {
-        if (isDead || Time.time < nextFireTime) return;
-
-        nextFireTime = Time.time + fireRate;
-
-        // Trigger attack animation
-        if (animator != null)
-        {
-            animator.SetTrigger(AttackHash);
-        }
-
-        // Play shoot audio
-        if (shootSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(shootSound);
-        }
-
-        // 1. Shoot via bulletPrefab if assigned
-        Vector3 spawnPos = projectileSpawnPoint != null ? projectileSpawnPoint.position : transform.position;
-
-        if (bulletPrefab != null)
-        {
-            GameObject bullet = Instantiate(bulletPrefab, spawnPos, Quaternion.identity);
+            float angle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg;
+            GameObject bullet = Instantiate(bulletPrefab, projectileSpawnPoint.position, Quaternion.Euler(0, 0, angle));
             Rigidbody2D bulletRb = bullet.GetComponent<Rigidbody2D>();
             if (bulletRb != null)
             {
                 bulletRb.linearVelocity = aimDirection * bulletSpeed;
             }
-            Destroy(bullet, 3f);
-        }
-        else
-        {
-            // 2. Or fallback to raycast shot
-            RaycastHit2D hit = Physics2D.Raycast(spawnPos, aimDirection, 15f);
-            if (hit.collider != null && hit.collider.CompareTag("Enemy"))
-            {
-                IDamageable enemy = hit.collider.GetComponentInParent<IDamageable>();
-                if (enemy != null) enemy.TakeDamage((int)meleeDamage);
-            }
         }
 
-        // Apply recoil impulse to player
-        if (rb != null && recoilStrength > 0f)
+        if (shootSound != null) AudioSource.PlayClipAtPoint(shootSound, transform.position);
+
+        if (rb != null)
         {
-            rb.AddForce(-aimDirection * (recoilStrength * 50f), ForceMode2D.Impulse);
+            rb.AddForce(-aimDirection * recoilStrength, ForceMode2D.Impulse);
         }
     }
 
-    public void PerformMeleeAttack()
+    private void PerformMelee()
     {
-        if (isDead) return;
-
-        if (animator != null) animator.SetTrigger(AttackHash);
+        if (animator != null) animator.SetTrigger("Attack");
 
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, meleeRange);
-        foreach (Collider2D hit in hits)
+        foreach (var hit in hits)
         {
             if (hit.CompareTag("Enemy"))
             {
-                IDamageable enemy = hit.GetComponentInParent<IDamageable>();
-                if (enemy != null) enemy.TakeDamage((int)meleeDamage);
+                IDamageable damageable = hit.GetComponent<IDamageable>();
+                if (damageable != null)
+                {
+                    damageable.TakeDamage((int)meleeDamage);
+                }
             }
         }
     }
 
-    // ========================================================
-    // 5. HEALTH, DAMAGE, KNOCKBACK & DEATH
-    // ========================================================
-    public void TakeDamage(int damage)
+    public void TakeDamage(int damage) => TakeDamage((float)damage);
+
+    public bool ChangeHealth(float change)
     {
-        TakeDamage((float)damage);
+        if (change < 0) return TakeDamage(Mathf.Abs(change));
+        return false;
     }
 
-    public void TakeDamage(float damage)
+    public bool TakeDamage(float damageAmount)
     {
-        if (isDead) return;
+        if (isDead) return false;
 
-        // Check invincibility timer
-        if (Time.time < lastDamageTime + invincibilityDuration)
-        {
-            return; // Invincible, ignore hit
-        }
-
+        if (Time.time < lastDamageTime + invincibilityDuration) return false;
         lastDamageTime = Time.time;
-        currentHealth -= damage;
-        if (currentHealth < 0) currentHealth = 0;
 
-
-        // Play hurt sound
-        if (hurtSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(hurtSound);
-        }
-
-        // Flash red visual effect
-        if (gameObject.activeInHierarchy)
-        {
-            StartCoroutine(FlashRedEffect());
-        }
-
-        // Animator hurt state
-        if (animator != null)
-        {
-            animator.SetTrigger("Hurt");
-            animator.SetBool(IsHurtHash, true);
-        }
-
-        // Update healthbar UI
+        currentHealth -= damageAmount;
         UpdateHealthBarUI();
 
-        // IMPORTANT: Game DOES NOT freeze when taking damage!
-        // Game ONLY freezes when player health reaches 0 (Death)!
+        if (hurtSound != null) AudioSource.PlayClipAtPoint(hurtSound, transform.position);
+
+        StartCoroutine(FlashRed());
+
         if (currentHealth <= 0)
         {
+            currentHealth = 0;
             Die();
         }
+
+        return true;
     }
 
-    public void ApplyKnockBack(Transform attacker)
+    private IEnumerator FlashRed()
     {
-        if (rb == null || attacker == null) return;
-        Vector2 pushDir = ((Vector2)transform.position - (Vector2)attacker.position).normalized;
-        rb.AddForce(pushDir * (damageKnockbackPower * 50f), ForceMode2D.Impulse);
+        foreach (var sr in allRenderers) if (sr != null) sr.color = new Color(1f, 0.2f, 0.2f, 1f);
+        yield return new WaitForSecondsRealtime(0.15f);
+        foreach (var sr in allRenderers) if (sr != null) sr.color = Color.white;
     }
 
-    private IEnumerator FlashRedEffect()
+    private void UpdateHealthBarUI()
     {
-        if (allRenderers != null)
+        if (healthSlider != null)
         {
-            foreach (var sr in allRenderers) sr.color = new Color(1f, 0.25f, 0.25f, 0.9f);
-            yield return new WaitForSeconds(0.15f);
-            if (!isDead)
-            {
-                foreach (var sr in allRenderers) sr.color = Color.white;
-            }
-            if (animator != null)
-            {
-                animator.SetBool(IsHurtHash, false);
-            }
-        }
-    }
-
-    public void UpdateHealthBarUI()
-    {
-        if (healthSlider == null) return;
-
-        float percentage = maxHealth > 0 ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
-        healthSlider.value = percentage;
-
-        if (healthBarFill != null)
-        {
-            if (percentage > 0.5f)
-            {
-                healthBarFill.color = Color.Lerp(Color.yellow, new Color(0.2f, 0.9f, 0.3f, 1f), (percentage - 0.5f) * 2f);
-            }
-            else
-            {
-                healthBarFill.color = Color.Lerp(new Color(0.9f, 0.15f, 0.15f, 1f), Color.yellow, percentage * 2f);
-            }
+            healthSlider.value = Mathf.Clamp01(currentHealth / maxHealth);
         }
     }
 
@@ -434,71 +260,47 @@ public class Player : MonoBehaviour, IDamageable
         if (isDead) return;
         isDead = true;
 
-
-        if (deathSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(deathSound);
-        }
-
-        // Safely detach Main Camera so view is not lost
-        if (Camera.main != null && Camera.main.transform.IsChildOf(transform))
-        {
-            Camera.main.transform.SetParent(null);
-        }
-
-        // Hide health bar UI
-        if (healthBarCanvas != null)
-        {
-            healthBarCanvas.gameObject.SetActive(false);
-        }
-
-        // Stop physics
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.simulated = false;
-        }
-
-        // Disable colliders
-        foreach (Collider2D col in GetComponentsInChildren<Collider2D>())
-        {
-            col.enabled = false;
-        }
-
-        // FREEZE GAME
         Time.timeScale = 0f;
+
+        if (deathSound != null) AudioSource.PlayClipAtPoint(deathSound, transform.position);
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        if (GameManager.Instance != null && GameManager.Instance.diePanel != null)
+        {
+            GameManager.Instance.diePanel.SetActive(true);
+        }
     }
 
-    // ========================================================
-    // 6. COLLECTIBLES & COINS
-    // ========================================================
+    public void CreateDustParticles()
+    {
+        if (dustParticleSystem != null)
+        {
+            dustParticleSystem.Stop();
+            dustParticleSystem.Play();
+        }
+    }
+
+    public void InvincibilityEnd()
+    {
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Coin"))
         {
             Destroy(other.gameObject);
             score++;
-        
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.CollectCoin();
-            }
+            if (GameManager.Instance != null) GameManager.Instance.CollectCoin();
         }
         else if (other.CompareTag("GoldKey") && other.GetComponent<Item>() == null)
         {
             Destroy(other.gameObject);
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.CollectGoldKey();
-            }
+            if (GameManager.Instance != null) GameManager.Instance.CollectGoldKey();
         }
         else if (other.CompareTag("SilverKey") && other.GetComponent<Item>() == null)
         {
             Destroy(other.gameObject);
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.CollectSilverKey();
-            }
+            if (GameManager.Instance != null) GameManager.Instance.CollectSilverKey();
         }
     }
 

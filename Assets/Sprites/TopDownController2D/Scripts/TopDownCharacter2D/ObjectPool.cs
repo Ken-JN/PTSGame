@@ -30,10 +30,7 @@ namespace TopDownCharacter2D
             }
         }
 
-        /// <summary>
-        ///     Returns an object from the pool
-        /// </summary>
-        /// <returns></returns>
+    
         public GameObject GetPooledObject()
         {
             for (int i = 0; i < amountToPool; i++)
